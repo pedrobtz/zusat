@@ -10,3 +10,24 @@ permissions: read-all
 jobs:
   R-CMD-check:
     uses: pedrobtz/r-actions/.github/workflows/r-cmd-check.yml@v1
+    with:
+      # The first two lines are the workflow's own default, repeated because
+      # setting this input replaces it rather than adding to it.
+      #
+      # The third is for ubuntu-clang only. libstdc++ 12 implements
+      # std::stable_sort and std::stable_partition -- which CaDiCaL calls in
+      # about ten places -- over std::get_temporary_buffer, deprecated in
+      # C++17, and does not silence the resulting diagnostic in its own
+      # header the way later versions do. clang therefore reports a
+      # deprecation from inside libstdc++ and R CMD check escalates it to
+      # "Found the following significant warnings".
+      #
+      # It is an artefact of that one image: clang23 builds against libc++,
+      # gcc16 ships a newer libstdc++, and both are clean. Neither available
+      # lever works from the package side -- PKG_CXXFLAGS = -Wno-* fails
+      # "checking compilation flags used", and an older CXX_STD is ignored
+      # by R-devel, which falls back to gnu++20 and then fails to compile.
+      container-makevars: |
+        CC += -std=gnu23
+        CFLAGS += -pedantic
+        CXXFLAGS += -Wno-deprecated-declarations
