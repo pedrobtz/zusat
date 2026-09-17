@@ -30,6 +30,47 @@ rm -f "$DEST/cadical.cpp" "$DEST/mobical.cpp" "$DEST/ipasir.cpp" "$DEST/ipasir.h
 
 cp "$TMP/cadical/LICENSE" "$PKG_ROOT/inst/CADICAL_LICENSE"
 
+# ---------------------------------------------------------------- test corpus
+# CaDiCaL's own regression instances, used by tests/testthat/test-corpus.R.
+#
+# Expected outcomes come from run.sh, which declares each as the solver's exit
+# status: "run <name> 10" is satisfiable, 20 unsatisfiable. Do not infer them
+# from whether a .sol file exists -- block0, elimredundant and sub0 are
+# satisfiable feature tests that ship without one, and guessing that way
+# reports three false failures.
+#
+# Instances are capped at 8KB each. That keeps 50 of the 85 in about 47KB and
+# still covers every family -- adders, factoring, pigeonhole, elimination,
+# subsumption, and the degenerate empty/false/unit cases -- while leaving out
+# the large adders and prime factorisations that dominate both size and
+# runtime.
+CORPUS="$PKG_ROOT/inst/extdata/cadical"
+CORPUS_MAX_BYTES=8192
+RUN_SH="$TMP/cadical/test/cnf/run.sh"
+
+[ -f "$RUN_SH" ] || die "cannot find test/cnf/run.sh in the upstream tree"
+
+rm -rf "$CORPUS"
+mkdir -p "$CORPUS"
+printf 'name\texpected\n' > "$CORPUS/expected.tsv"
+
+grep -oE '^[[:space:]]*run [a-zA-Z0-9_.-]+ [0-9]+' "$RUN_SH" |
+  awk '{print $2, $3}' |
+  while read -r name code; do
+    src="$TMP/cadical/test/cnf/$name.cnf"
+    [ -f "$src" ] || continue
+    bytes=$(wc -c < "$src" | tr -d ' ')
+    [ "$bytes" -le "$CORPUS_MAX_BYTES" ] || continue
+    case "$code" in
+      10) expected=sat;;
+      20) expected=unsat;;
+      *) continue;;
+    esac
+    cp "$src" "$CORPUS/$name.cnf"
+    printf '%s\t%s\n' "$name" "$expected" >> "$CORPUS/expected.tsv"
+  done
+
+
 # Adapt the tree to R's C API (output, fatal paths, no fork/exec) before
 # anything is recorded, so checksums cover exactly what gets compiled.
 ( cd "$PKG_ROOT" && ./tools/vendor/patch-for-r.sh )
@@ -80,7 +121,7 @@ mkdir -p "$PKG_ROOT/tools/vendor"
 
 # Checksums are recorded over paths relative to the package root and sorted,
 # so the file is reproducible regardless of where the script was run from.
-( cd "$PKG_ROOT" && find src/cadical -type f \
+( cd "$PKG_ROOT" && find src/cadical inst/extdata/cadical -type f \
     ! -name 'objects.mk' ! -name 'VENDORED' \
     | LC_ALL=C sort | xargs "$SHA_SUM" ) > "$CHECKSUMS"
 

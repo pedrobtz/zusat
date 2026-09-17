@@ -37,16 +37,17 @@ recorded="$(mktemp)"; present="$(mktemp)"
 trap 'rm -f "$recorded" "$present"' EXIT
 
 sed -e 's/^[0-9a-f]*  //' "$CHECKSUMS" | LC_ALL=C sort > "$recorded"
-find src/cadical -type f ! -name 'objects.mk' ! -name 'VENDORED' \
+find src/cadical inst/extdata/cadical -type f \
+  ! -name 'objects.mk' ! -name 'VENDORED' \
   | LC_ALL=C sort > "$present"
 
 if ! extra="$(comm -13 "$recorded" "$present")" || [ -n "$extra" ]; then
-  echo "verify: unrecorded files under src/cadical:" >&2
+  echo "verify: unrecorded files under the vendored trees:" >&2
   echo "$extra" >&2
   status=1
 fi
 
 if [ "$status" -eq 0 ]; then
-  echo "verify: src/cadical matches the manifest ($(wc -l < "$recorded" | tr -d ' ') files)"
+  echo "verify: vendored trees match the manifest ($(wc -l < "$recorded" | tr -d ' ') files)"
 fi
 exit $status
