@@ -5,6 +5,8 @@ on:
 
 name: vendor
 
+permissions: read-all
+
 jobs:
   vendor:
     uses: pedrobtz/r-actions/.github/workflows/vendor.yml@v1
