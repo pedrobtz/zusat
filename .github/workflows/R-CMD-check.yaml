@@ -14,20 +14,33 @@ jobs:
       # The first two lines are the workflow's own default, repeated because
       # setting this input replaces it rather than adding to it.
       #
-      # The third is for ubuntu-clang only. libstdc++ 12 implements
+      # The third exists for ubuntu-clang. libstdc++ 12 implements
       # std::stable_sort and std::stable_partition -- which CaDiCaL calls in
-      # about ten places -- over std::get_temporary_buffer, deprecated in
-      # C++17, and does not silence the resulting diagnostic in its own
-      # header the way later versions do. clang therefore reports a
-      # deprecation from inside libstdc++ and R CMD check escalates it to
-      # "Found the following significant warnings".
+      # about ten places -- over its own std::get_temporary_buffer, which
+      # C++17 deprecated, and unlike later versions it does not silence the
+      # resulting diagnostic inside its own header. clang therefore reports a
+      # deprecation from within libstdc++ and R CMD check escalates it to
+      # "Found the following significant warnings". The defect is the image's:
+      # clang23 builds against libc++ and gcc16 ships a newer libstdc++, and
+      # both are clean, as is CRAN's debian-clang.
       #
-      # It is an artefact of that one image: clang23 builds against libc++,
-      # gcc16 ships a newer libstdc++, and both are clean. Neither available
-      # lever works from the package side -- PKG_CXXFLAGS = -Wno-* fails
-      # "checking compilation flags used", and an older CXX_STD is ignored
-      # by R-devel, which falls back to gnu++20 and then fails to compile.
+      # libstdc++ guards the attribute on __DEPRECATED, which the compiler
+      # predefines in C++ mode, so undefining it empties the macro. Be clear
+      # about what this is: suppression by another route. It silences every
+      # libstdc++ deprecation for C++ in the container job, not just this one.
+      # It is here rather than in src/Makevars because the package cannot do
+      # it at all -- PKG_CXXFLAGS = -Wno-deprecated-declarations fails
+      # "checking compilation flags used", which rejects flags that suppress
+      # warnings, and so does the same flag set from here. -U__DEPRECATED
+      # passes that check where -Wno-* does not.
+      #
+      # It must be CXX17FLAGS, not CXXFLAGS: src/Makevars sets CXX_STD = CXX17,
+      # and R then compiles through the per-standard variable, so appending to
+      # CXXFLAGS is silently ignored.
+      #
+      # Drop this and set containers to '["clang23", "ubuntu-gcc16"]' if you
+      # would rather lose the leg than carry the suppression.
       container-makevars: |
         CC += -std=gnu23
         CFLAGS += -pedantic
-        CXXFLAGS += -Wno-deprecated-declarations
+        CXX17FLAGS += -U__DEPRECATED
