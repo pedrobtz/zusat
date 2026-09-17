@@ -11,6 +11,7 @@ static const R_CallMethodDef CallEntries[] = {
   {"zusat_set_option", (DL_FUNC) &zusat_set_option, 3},
   {"zusat_get_option", (DL_FUNC) &zusat_get_option, 2},
   {"zusat_n_vars",     (DL_FUNC) &zusat_n_vars,     1},
+  {"zusat_n_clauses",  (DL_FUNC) &zusat_n_clauses,  1},
   {"zusat_signature",  (DL_FUNC) &zusat_signature,  0},
   {NULL, NULL, 0}
 };

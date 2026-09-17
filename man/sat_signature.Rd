@@ -2,7 +2,7 @@
 % Please edit documentation in R/solver.R
 \name{sat_signature}
 \alias{sat_signature}
-\title{Version string of the vendored CaDiCaL}
+\title{Version of the bundled CaDiCaL}
 \usage{
 sat_signature()
 }
@@ -10,7 +10,7 @@ sat_signature()
 A single string, for example \code{"cadical-3.0.1"}.
 }
 \description{
-Version string of the vendored CaDiCaL
+Version of the bundled CaDiCaL
 }
 \examples{
 sat_signature()

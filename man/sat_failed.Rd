@@ -2,20 +2,29 @@
 % Please edit documentation in R/solver.R
 \name{sat_failed}
 \alias{sat_failed}
-\title{Identify which assumptions caused unsatisfiability}
+\title{Which assumptions caused unsatisfiability}
 \usage{
 sat_failed(solver, assumptions)
 }
 \arguments{
 \item{solver}{A \code{zusat_solver}.}
 
-\item{assumptions}{The same integer vector passed to \code{\link[=sat_solve]{sat_solve()}}.}
+\item{assumptions}{The same literals passed to \code{\link[=sat_solve]{sat_solve()}}.}
 }
 \value{
 A logical vector marking the assumptions that were used.
 }
 \description{
 After \code{\link[=sat_solve]{sat_solve()}} returns \code{"unsat"} for a call made with assumptions,
-this reports the subset of those assumptions the solver actually used.
-It is a small unsatisfiable core over the assumptions, not over clauses.
+this reports the subset the solver actually used to derive the conflict.
+}
+\details{
+It is an unsatisfiable core over the \emph{assumptions}, not over the clauses.
+CaDiCaL does not expose clause-level cores, so unlike some solvers there
+is no way to ask which of the original clauses are jointly contradictory.
+}
+\examples{
+s <- sat_solver(list(c(1, 2)))
+sat_solve(s, assumptions = c(-1, -2))
+sat_failed(s, c(-1, -2))
 }

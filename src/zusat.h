@@ -13,6 +13,7 @@ SEXP zusat_failed(SEXP xptr, SEXP assumptions);
 SEXP zusat_set_option(SEXP xptr, SEXP name, SEXP value);
 SEXP zusat_get_option(SEXP xptr, SEXP name);
 SEXP zusat_n_vars(SEXP xptr);
+SEXP zusat_n_clauses(SEXP xptr);
 SEXP zusat_signature(void);
 
 #endif /* ZUSAT_H */
