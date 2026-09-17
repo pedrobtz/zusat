@@ -5,6 +5,8 @@ on:
 
 name: native-checks
 
+permissions: read-all
+
 jobs:
   # src/zusat.c hand-writes the PROTECT/UNPROTECT balance around every SEXP
   # it allocates. rchk proves that statically; gctorture exercises it.
