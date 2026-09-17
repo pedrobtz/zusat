@@ -1,0 +1,2 @@
+name	repo	ref	commit	version	dest
+cadical	https://github.com/arminbiere/cadical.git	rel-3.0.1	c60730422e758ef1cebe7aeddf2dda31c996bf04	3.0.1	src/cadical

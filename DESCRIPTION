@@ -1,9 +1,22 @@
 Package: zusat
-Title: What the Package Does (One Line, Title Case)
+Title: R Bindings for the 'CaDiCaL' SAT Solver
 Version: 0.0.0.9000
-Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+Authors@R: c(
+    person("Pedro", "Batista", , "pedrobtz@gmail.com", role = c("aut", "cre")),
+    person("Armin", "Biere", role = "cph",
+           comment = "Author of the bundled CaDiCaL solver"),
+    person("Mathias", "Fleury", role = "cph",
+           comment = "Author of the bundled CaDiCaL solver"),
+    person("Katalin", "Fazekas", role = "cph",
+           comment = "Author of the bundled CaDiCaL solver"),
+    person("Nils", "Froleyks", role = "cph",
+           comment = "Author of the bundled CaDiCaL solver")
+  )
+Description: Solves Boolean satisfiability (SAT) problems using 'CaDiCaL',
+    a modern conflict-driven clause learning solver. Supports incremental
+    solving, solving under assumptions, and inspection of which assumptions
+    caused unsatisfiability. The 'CaDiCaL' C++ sources are bundled, so no
+    external solver installation is required.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -11,4 +24,6 @@ RoxygenNote: 8.0.0
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
-URL: https://pedrobtz.github.io/zusat/
+URL: https://pedrobtz.github.io/zusat/,
+    https://github.com/pedrobtz/zusat
+BugReports: https://github.com/pedrobtz/zusat/issues

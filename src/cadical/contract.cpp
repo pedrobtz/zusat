@@ -1,0 +1,27 @@
+#include "zusat_r_compat.h"
+#ifndef NCONTRACTS
+
+#include "internal.hpp"
+
+namespace CaDiCaL {
+
+void fatal_message_start ();
+
+// See comments in 'contract.hpp'. Ugly hack we keep for now.
+
+void require_solver_pointer_to_be_non_zero (const void *ptr,
+                                            const char *function_name,
+                                            const char *file_name) {
+  if (ptr)
+    return;
+  fatal_message_start ();
+  REprintf ("invalid API usage of '%s' in '%s': "
+           "solver 'this' pointer zero (not initialized)\n",
+           function_name, file_name);
+  ((void) 0);
+  ZUSAT_FATAL ("aborted");
+}
+
+} // namespace CaDiCaL
+
+#endif

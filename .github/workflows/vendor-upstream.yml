@@ -1,0 +1,18 @@
+on:
+  schedule:
+    # Weekly. A new CaDiCaL release is not urgent, and a daily job that finds
+    # nothing 364 times a year is one people stop reading.
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+name: vendor-upstream
+
+jobs:
+  upstream:
+    uses: pedrobtz/r-actions/.github/workflows/vendor-upstream.yml@v1
+    permissions:
+      contents: read
+      issues: write
+    with:
+      upstream-repo: arminbiere/cadical
+      current-version: "sed -n 's/^version: //p' src/cadical/VENDORED"
