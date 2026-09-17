@@ -18,6 +18,15 @@
 ##              fork and exec gzip/xz and _exit() in the child. zusat never
 ##              opens a file through CaDiCaL, and R CMD check rejects _exit.
 
+## Every .cpp lives in cadical/, and R CMD INSTALL only globs src/*.c* --
+## it never sees them, so it would link the .so with the C compiler and
+## leave every C++ standard-library symbol undefined. That happens to work
+## wherever R has already loaded libstdc++, and fails at dlopen on the
+## libc++ toolchains: "undefined symbol: _ZNSt3__19to_stringEj". Declaring
+## CXX_STD is what tells R this is a C++ package, so it links with CXX.
+## CaDiCaL needs C++11 at minimum; 17 is what R has defaulted to since 4.3.
+CXX_STD = CXX17
+
 PKG_CPPFLAGS = -I. -Icadical -DNBUILD -DNDEBUG -DQUIET -DNTRACING \
                -DNCLOSEFROM -DNUNLOCKED -DZUSAT_NO_PIPES
 
