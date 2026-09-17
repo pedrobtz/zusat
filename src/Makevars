@@ -24,8 +24,17 @@
 ## wherever R has already loaded libstdc++, and fails at dlopen on the
 ## libc++ toolchains: "undefined symbol: _ZNSt3__19to_stringEj". Declaring
 ## CXX_STD is what tells R this is a C++ package, so it links with CXX.
-## CaDiCaL needs C++11 at minimum; 17 is what R has defaulted to since 4.3.
-CXX_STD = CXX17
+## The standard is pinned to 14 rather than R's default of 17 for a second
+## reason. libstdc++ 12 implements std::stable_sort -- which CaDiCaL calls in
+## about ten places -- over std::get_temporary_buffer, and C++17 deprecates
+## that. clang then reports a deprecation inside libstdc++'s own header, and
+## R CMD check escalates it to "Found the following significant warnings",
+## failing the build. Before C++17 the deprecation does not exist, so the
+## warning does not arise. Suppressing it instead is not an option: a
+## -Wno-* flag trips "checking compilation flags used", which rejects flags
+## that suppress warnings. CaDiCaL itself only requires C++11, and its own
+## configure builds with -std=c++11, so 14 asks for nothing it lacks.
+CXX_STD = CXX14
 
 PKG_CPPFLAGS = -I. -Icadical -DNBUILD -DNDEBUG -DQUIET -DNTRACING \
                -DNCLOSEFROM -DNUNLOCKED -DZUSAT_NO_PIPES
