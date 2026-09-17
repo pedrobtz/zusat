@@ -4,22 +4,34 @@
 \alias{sat_solver}
 \title{Create a CaDiCaL solver}
 \usage{
-sat_solver()
+sat_solver(formula = NULL)
+}
+\arguments{
+\item{formula}{Optional list of clauses to seed the solver with, as in
+\code{\link[=sat_add]{sat_add()}}. Equivalent to creating an empty solver and adding them.}
 }
 \value{
 An object of class \code{zusat_solver}.
 }
 \description{
-Creates an incremental SAT solver backed by a vendored copy of CaDiCaL.
-The returned handle keeps state across calls, so clauses added earlier
-remain in effect: this is what makes incremental solving possible.
+Creates an incremental SAT solver backed by a bundled copy of CaDiCaL. The
+handle keeps its state across calls, so clauses added earlier stay in
+effect. This is what makes incremental solving possible, and it is the
+reason to reach for a solver rather than calling \code{\link[=sat_solve]{sat_solve()}} on a
+formula: adding a clause and re-solving reuses everything the solver
+already learned.
 }
 \details{
-The underlying solver is released automatically when the handle is
-garbage collected.
+The underlying solver is released when the handle is garbage collected.
 }
 \examples{
-s <- sat_solver()
-sat_add(s, c(1L, 2L))
+s <- sat_solver(list(c(1, 2), c(-1, 2)))
 sat_solve(s)
+
+# incremental: the second solve reuses the first one's work
+sat_add(s, -2)
+sat_solve(s)
+}
+\seealso{
+\code{\link[=sat_add]{sat_add()}} to add clauses, \code{\link[=sat_solve]{sat_solve()}} to solve.
 }

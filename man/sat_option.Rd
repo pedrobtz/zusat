@@ -11,18 +11,18 @@ sat_option(solver, name, value)
 
 \item{name}{A single option name.}
 
-\item{value}{An integer value to set. When missing, the current value is
+\item{value}{An integer to set. When missing, the current value is
 returned instead.}
 }
 \value{
-The option value, invisibly when setting.
+The option value; invisibly when setting.
 }
 \description{
 CaDiCaL exposes several hundred integer-valued tuning options, for example
-\code{"elim"}, \code{"vivify"}, or \code{"restartint"}. Names are as documented by
-CaDiCaL itself.
+\code{"elim"}, \code{"vivify"} or \code{"restartint"}. Names are CaDiCaL's own.
 }
 \examples{
 s <- sat_solver()
 sat_option(s, "elim")
+sat_option(s, "elim", 0)
 }
