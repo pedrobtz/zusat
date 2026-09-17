@@ -2,26 +2,46 @@
 % Please edit documentation in R/solver.R
 \name{sat_solve}
 \alias{sat_solve}
-\title{Solve the current formula}
+\alias{sat_solve.zusat_solver}
+\alias{sat_solve.default}
+\title{Solve a formula}
 \usage{
-sat_solve(solver, assumptions = integer())
+sat_solve(x, assumptions = integer(), ...)
+
+\method{sat_solve}{zusat_solver}(x, assumptions = integer(), ...)
+
+\method{sat_solve}{default}(x, assumptions = integer(), ...)
 }
 \arguments{
-\item{solver}{A \code{zusat_solver}.}
+\item{x}{A list of clauses, or a \code{zusat_solver}.}
 
-\item{assumptions}{Integer vector of literals assumed true for this call
-only. Assumptions are not retained across calls.}
+\item{assumptions}{Numeric vector of literals assumed true for this call
+only. Assumptions are never retained between calls. When the result is
+unsatisfiable, \code{\link[=sat_failed]{sat_failed()}} reports which of them the solver used.}
+
+\item{...}{Passed to methods.}
 }
 \value{
-One of \code{"sat"}, \code{"unsat"}, or \code{"unknown"}.
+A \link{zusat_solution}.
 }
 \description{
-Long solves can be interrupted with Ctrl-C; the solver stops at its next
-safe point and the handle stays usable.
+Solves either a formula given directly, or the current state of a solver.
+Both return the same kind of object, so code that reads the result does
+not need to know which was used.
+}
+\details{
+Long solves respond to Ctrl-C. The solver stops at its next safe point and
+raises a catchable error; a solver handle stays usable afterwards.
 }
 \examples{
-s <- sat_solver()
-sat_add(s, c(1L, 2L))
-sat_solve(s)
-sat_solve(s, assumptions = -1L)
+# a formula directly
+sat_solve(list(c(1, 2), c(-1, 2)))
+
+# or a solver, for incremental work
+s <- sat_solver(list(c(1, 2)))
+sat_solve(s, assumptions = -1)
+}
+\seealso{
+\code{\link[=sat_status]{sat_status()}} to read the outcome, \code{\link[=sat_solutions]{sat_solutions()}} to
+enumerate more than one model.
 }

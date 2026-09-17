@@ -2,16 +2,34 @@
 % Please edit documentation in R/solver.R
 \name{sat_n_vars}
 \alias{sat_n_vars}
-\title{Number of variables known to the solver}
+\alias{sat_n_clauses}
+\title{Size of the formula a solver holds}
 \usage{
 sat_n_vars(solver)
+
+sat_n_clauses(solver)
 }
 \arguments{
 \item{solver}{A \code{zusat_solver}.}
 }
 \value{
-An integer scalar.
+A single number.
 }
 \description{
-Number of variables known to the solver
+\code{sat_n_clauses()} reports CaDiCaL's count of \emph{active} original clauses,
+which is not the same as the number passed to \code{\link[=sat_add]{sat_add()}}. Clauses the
+solver learned during search are excluded, being an artefact of search
+rather than of the formula. So are clauses it has since disposed of: a
+unit clause becomes a fixed assignment and stops being counted, and
+simplification removes others. Adding \code{1} and \code{-1} and then solving
+therefore leaves a count of zero.
+}
+\details{
+If you need the number of clauses you supplied, count them yourself --
+the solver does not keep that figure.
+}
+\examples{
+s <- sat_solver(list(c(1, 2), c(-1, 3)))
+sat_n_vars(s)
+sat_n_clauses(s)
 }
