@@ -1,3 +1,27 @@
+# Coerce to DIMACS literals, rejecting what as.integer() would otherwise
+# accept silently: "1" becomes 1L and 1.7 becomes 1L, so a typo in a formula
+# turns into a different formula rather than an error.
+as_literals <- function(x, arg = "literals") {
+  if (is.null(x)) {
+    return(integer())
+  }
+  if (!is.numeric(x) || is.factor(x)) {
+    stop(sprintf("`%s` must be numeric, not %s", arg, class(x)[1]), call. = FALSE)
+  }
+  if (is.double(x) && any(x != trunc(x), na.rm = TRUE)) {
+    stop(sprintf("`%s` must be whole numbers", arg), call. = FALSE)
+  }
+  if (anyNA(x)) {
+    stop(sprintf("`%s` must not be NA", arg), call. = FALSE)
+  }
+  x <- as.integer(x)
+  if (any(x == 0L)) {
+    stop(sprintf("`%s` must not contain 0; clauses are terminated automatically", arg),
+         call. = FALSE)
+  }
+  x
+}
+
 #' Create a CaDiCaL solver
 #'
 #' Creates an incremental SAT solver backed by a vendored copy of CaDiCaL.
@@ -39,7 +63,7 @@ print.zusat_solver <- function(x, ...) {
 #' s <- sat_solver()
 #' sat_add(s, c(1L, -2L))
 sat_add <- function(solver, literals) {
-  .Call(zusat_add_clause, solver, as.integer(literals))
+  .Call(zusat_add_clause, solver, as_literals(literals))
   invisible(solver)
 }
 
@@ -57,7 +81,7 @@ sat_add_all <- function(solver, clauses) {
     stop("`clauses` must be a list of integer vectors", call. = FALSE)
   }
   for (cl in clauses) {
-    .Call(zusat_add_clause, solver, as.integer(cl))
+    .Call(zusat_add_clause, solver, as_literals(cl, "clauses"))
   }
   invisible(solver)
 }
@@ -78,7 +102,7 @@ sat_add_all <- function(solver, clauses) {
 #' sat_solve(s)
 #' sat_solve(s, assumptions = -1L)
 sat_solve <- function(solver, assumptions = integer()) {
-  .Call(zusat_solve, solver, as.integer(assumptions))
+  .Call(zusat_solve, solver, as_literals(assumptions, "assumptions"))
 }
 
 #' Read variable assignments from a satisfying model
@@ -110,7 +134,7 @@ sat_model <- function(solver, vars = seq_len(sat_n_vars(solver))) {
 #' @return A logical vector marking the assumptions that were used.
 #' @export
 sat_failed <- function(solver, assumptions) {
-  .Call(zusat_failed, solver, as.integer(assumptions))
+  .Call(zusat_failed, solver, as_literals(assumptions, "assumptions"))
 }
 
 #' Number of variables known to the solver

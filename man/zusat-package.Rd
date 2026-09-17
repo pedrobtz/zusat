@@ -11,6 +11,7 @@ Solves Boolean satisfiability (SAT) problems using 'CaDiCaL', a modern conflict-
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://pedrobtz.github.io/zusat/}
   \item \url{https://github.com/pedrobtz/zusat}
   \item Report bugs at \url{https://github.com/pedrobtz/zusat/issues}
 }

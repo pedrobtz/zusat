@@ -87,7 +87,7 @@ test_that("pigeonhole instances are unsatisfiable", {
 
 test_that("invalid literals are rejected", {
   s <- sat_solver()
-  expect_error(sat_add(s, c(1L, 0L)), "not a valid literal")
+  expect_error(sat_add(s, c(1L, 0L)), "must not contain 0")
   expect_error(sat_add(s, c(1L, NA_integer_)), "must not be NA")
 })
 
@@ -114,4 +114,50 @@ test_that("the vendored solver reports its version", {
 test_that("solver handles print", {
   s <- sat_solver()
   expect_output(print(s), "zusat_solver")
+})
+
+# ---------------------------------------------------------------------------
+# Adapted from rpicosat's suite (MIT, Dirk Schumacher). Its input-validation
+# cases are the valuable part: they cover coercions that as.integer() would
+# otherwise perform silently, turning a malformed formula into a different
+# well-formed one. Its exact-model assertions are deliberately not copied --
+# any satisfying assignment is a correct answer, so pinning one makes the
+# test brittle against a solver change rather than checking correctness.
+
+test_that("literals must be numeric", {
+  s <- sat_solver()
+  expect_error(sat_add(s, c("1", "2")), "must be numeric")
+  expect_error(sat_add(s, factor(c(1, 2))), "must be numeric")
+  expect_error(sat_add(s, TRUE), "must be numeric")
+})
+
+test_that("literals must be whole numbers", {
+  s <- sat_solver()
+  # as.integer(1.7) is 1L, so without this a typo silently changes the formula
+  expect_error(sat_add(s, c(1.7, 2)), "whole numbers")
+})
+
+test_that("doubles that are whole are accepted", {
+  # R users write c(1, -2) far more often than c(1L, -2L)
+  s <- sat_solver()
+  expect_silent(sat_add(s, c(1, -2)))
+  expect_equal(sat_solve(s), "sat")
+})
+
+test_that("assumptions get the same validation as clauses", {
+  s <- sat_solver()
+  sat_add(s, c(1, 2))
+  expect_error(sat_solve(s, assumptions = "1"), "must be numeric")
+  expect_error(sat_solve(s, assumptions = 0), "must not contain 0")
+  expect_error(sat_solve(s, assumptions = 1.5), "whole numbers")
+})
+
+test_that("an implication chain propagates under an assumption", {
+  # 1 => 2, 2 => 3. Assuming 1 forces all three true, so unlike a general
+  # model this one is uniquely determined and safe to assert exactly.
+  s <- sat_solver()
+  sat_add_all(s, list(c(-1, 2), c(-2, 3)))
+
+  expect_equal(sat_solve(s, assumptions = 1), "sat")
+  expect_equal(sat_model(s, 1:3), c(TRUE, TRUE, TRUE))
 })
