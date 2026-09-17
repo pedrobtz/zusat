@@ -1,1 +1,7 @@
+*.o
+*.so
+*.dll
+zusat_*.tar.gz
+zusat.Rcheck/
+.Rproj.user/
 docs

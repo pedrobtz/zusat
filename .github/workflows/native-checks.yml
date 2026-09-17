@@ -1,0 +1,20 @@
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+name: native-checks
+
+jobs:
+  # src/zusat.c hand-writes the PROTECT/UNPROTECT balance around every SEXP
+  # it allocates. rchk proves that statically; gctorture exercises it.
+  rchk:
+    uses: pedrobtz/r-actions/.github/workflows/rchk.yml@v1
+
+  gctorture:
+    uses: pedrobtz/r-actions/.github/workflows/gctorture.yml@v1
+    with:
+      # The suite is small (24 assertions), but a pigeonhole solve between
+      # collections is not: step 20 would spend the budget inside CaDiCaL
+      # rather than across R allocations.
+      step: 100

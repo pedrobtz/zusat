@@ -1,0 +1,19 @@
+The zusat R package as a whole is released under the MIT licence; see the
+LICENSE file.
+
+Bundled third-party source
+--------------------------
+
+src/cadical/ contains the CaDiCaL SAT solver, vendored unmodified from
+https://github.com/arminbiere/cadical (version 3.0.1). CaDiCaL is
+distributed under the MIT licence, reproduced in inst/CADICAL_LICENSE.
+
+Copyright (c) 2016-2021 Armin Biere, Johannes Kepler University Linz, Austria
+Copyright (c) 2020-2021 Mathias Fleury, Johannes Kepler University Linz, Austria
+Copyright (c) 2020-2021 Nils Froleyks, Johannes Kepler University Linz, Austria
+Copyright (c) 2022-2026 Katalin Fazekas, Vienna University of Technology, Austria
+Copyright (c) 2021-2026 Armin Biere, University of Freiburg, Germany
+Copyright (c) 2021-2026 Mathias Fleury, University of Freiburg, Germany
+
+See src/cadical/VENDORED for the exact upstream commit and the command used
+to regenerate the vendored tree.

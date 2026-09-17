@@ -1,5 +1,15 @@
 ^LICENSE\.md$
 ^\.github$
+^tools$
+^.*\.Rproj$
+^\.Rproj\.user$
+^zusat_.*\.tar\.gz$
+^zusat\.Rcheck$
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
+## R CMD build strips src/*.o but not object files in src subdirectories,
+## so the vendored CaDiCaL build artifacts must be excluded explicitly.
+^src/.*\.o$
+^src/.*\.so$
+^src/.*\.dll$
