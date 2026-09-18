@@ -178,6 +178,76 @@ SEXP zusat_get_option(SEXP xptr, SEXP name) {
   return Rf_ScalarInteger(ccadical_get_option(s, CHAR(STRING_ELT(name, 0))));
 }
 
+/* ------------------------------------------------------------------ */
+/* Resource limits, constraints and root-level facts                   */
+
+SEXP zusat_limit(SEXP xptr, SEXP name, SEXP value) {
+  CCaDiCaL *s = solver_from(xptr);
+  if (TYPEOF(name) != STRSXP || XLENGTH(name) != 1)
+    Rf_error("limit name must be a single string");
+  if (TYPEOF(value) != INTSXP || XLENGTH(value) != 1)
+    Rf_error("limit value must be a single integer");
+  /* ccadical_limit drops the bool that says whether the name was known, so
+     an unrecognised name is silently ignored and the solve runs unbounded.
+     The R layer checks the name before we get here. */
+  ccadical_limit(s, CHAR(STRING_ELT(name, 0)), INTEGER(value)[0]);
+  return R_NilValue;
+}
+
+SEXP zusat_constrain(SEXP xptr, SEXP lits) {
+  CCaDiCaL *s = solver_from(xptr);
+  if (TYPEOF(lits) != INTSXP)
+    Rf_error("constraint must be an integer vector");
+
+  R_xlen_t n = XLENGTH(lits);
+  const int *p = INTEGER(lits);
+  check_lits(p, n);
+
+  for (R_xlen_t i = 0; i < n; i++)
+    ccadical_constrain(s, p[i]);
+  ccadical_constrain(s, 0); /* terminate the constraint clause */
+
+  return R_NilValue;
+}
+
+SEXP zusat_constraint_failed(SEXP xptr) {
+  return Rf_ScalarLogical(ccadical_constraint_failed(solver_from(xptr)) != 0);
+}
+
+SEXP zusat_fixed(SEXP xptr, SEXP lits) {
+  CCaDiCaL *s = solver_from(xptr);
+  if (TYPEOF(lits) != INTSXP)
+    Rf_error("lits must be an integer vector");
+
+  R_xlen_t n = XLENGTH(lits);
+  const int *p = INTEGER(lits);
+  SEXP out = PROTECT(Rf_allocVector(LGLSXP, n));
+  int *op = LOGICAL(out);
+
+  for (R_xlen_t i = 0; i < n; i++) {
+    if (p[i] == NA_INTEGER || p[i] == 0) {
+      op[i] = NA_LOGICAL;
+    } else {
+      /* 1 = implied true, -1 = implied false, 0 = not yet decided */
+      int f = ccadical_fixed(s, p[i]);
+      op[i] = (f == 0) ? NA_LOGICAL : (f > 0);
+    }
+  }
+  UNPROTECT(1);
+  return out;
+}
+
+SEXP zusat_simplify(SEXP xptr) {
+  int res = ccadical_simplify(solver_from(xptr));
+  const char *status;
+  switch (res) {
+    case 10: status = "sat";     break;
+    case 20: status = "unsat";   break;
+    default: status = "unknown"; break;
+  }
+  return Rf_mkString(status);
+}
+
 SEXP zusat_n_clauses(SEXP xptr) {
   /* irredundant() counts the original (non-learnt) clauses still active --
      the closest CaDiCaL offers to "how big is the formula". Learnt clauses

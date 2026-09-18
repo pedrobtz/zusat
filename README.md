@@ -122,6 +122,55 @@ CaDiCaL does not expose cores over the original *clauses*, only over
 assumptions. If you need to know which clauses conflict, encode each one with
 a selector variable and assume the selectors.
 
+### Bounding a solve
+
+SAT is NP-complete, so an innocuous-looking formula can run far longer than
+you are willing to wait. A limit makes the solver give up and return
+`"unknown"` instead of an answer:
+
+``` r
+s <- sat_solver(hard_formula)
+sat_limit(s, "conflicts", 10000)
+
+sol <- sat_solve(s)
+if (sat_status(sol) == "unknown") {
+  # gave up within budget -- not the same as unsatisfiable
+}
+```
+
+Like assumptions, a limit applies to the next `sat_solve()` only.
+
+### Temporary constraints
+
+Assumptions fix individual literals. A constraint is a whole clause that
+applies to one solve and is then discarded — useful for asking "what if at
+least one of these were false?" without permanently changing the formula:
+
+``` r
+s <- sat_solver(list(c(1, 2)))
+
+sat_constrain(s, c(-1, -2))   # at least one of x1, x2 false
+sat_solve(s)
+sat_constraint_failed(s)      # did the constraint cause unsat?
+
+sat_solve(s)                  # constraint is gone
+```
+
+### What the solver has already proved
+
+`sat_fixed()` reports literals true in every model, or false in every model —
+the formula's backbone as far as the solver has discovered it:
+
+``` r
+s <- sat_solver(list(1, c(-1, 2)))
+sat_solve(s)
+
+sat_fixed(s, c(1, 2, 3))   #> TRUE TRUE NA
+```
+
+`sat_simplify()` runs CaDiCaL's inprocessing without searching, which
+occasionally settles a formula outright and otherwise leaves it smaller.
+
 ### Tuning
 
 CaDiCaL has several hundred integer options:
