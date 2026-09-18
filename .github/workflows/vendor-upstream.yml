@@ -15,4 +15,4 @@ jobs:
       issues: write
     with:
       upstream-repo: arminbiere/cadical
-      current-version: "sed -n 's/^version: //p' src/cadical/VENDORED"
+      current-version: "sed -n 's/^version: //p' tools/vendor/VENDORED"

@@ -49,7 +49,7 @@ trap 'rm -f "$recorded" "$present"' EXIT
 
 sed -e 's/^[0-9a-f]*  //' "$CHECKSUMS" | LC_ALL=C sort > "$recorded"
 find src/cadical inst/extdata/cadical -type f \
-  ! -name 'objects.mk' ! -name 'VENDORED' \
+  ! -name 'objects.mk' \
   | LC_ALL=C sort > "$present"
 
 if ! extra="$(comm -13 "$recorded" "$present")" || [ -n "$extra" ]; then
