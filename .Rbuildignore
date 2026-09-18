@@ -8,6 +8,11 @@
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
+## The article under vignettes/articles/ is a pkgdown-only document, not a
+## package vignette: it is built when the site is built and never shipped in
+## the tarball. Keeping it out means R CMD check does not run it, so the
+## package needs no VignetteBuilder and no knitr/rmarkdown dependency.
+^vignettes$
 ## R CMD build strips src/*.o but not object files in src subdirectories,
 ## so the vendored CaDiCaL build artifacts must be excluded explicitly.
 ^src/.*\.o$
