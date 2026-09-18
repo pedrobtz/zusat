@@ -5,6 +5,7 @@
 ^\.Rproj\.user$
 ^zusat_.*\.tar\.gz$
 ^zusat\.Rcheck$
+^cran-comments\.md$
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$

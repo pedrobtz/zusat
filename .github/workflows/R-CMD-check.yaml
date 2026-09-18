@@ -40,6 +40,13 @@ jobs:
       #
       # Drop this and set containers to '["clang23", "ubuntu-gcc16"]' if you
       # would rather lose the leg than carry the suppression.
+      # CRAN runs a flavour with suggested packages unavailable, and this
+      # package has only testthat in Suggests -- so tests/testthat.R is the
+      # whole exposure. The job is off by default, which is exactly why an
+      # unguarded library(testthat) can sit in a repository with every check
+      # green. Turned on so the guard is verified rather than assumed.
+      nosuggests: true
+
       container-makevars: |
         CC += -std=gnu23
         CFLAGS += -pedantic
