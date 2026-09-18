@@ -74,7 +74,13 @@ SEXP zusat_trace_proof(SEXP xptr, SEXP path) {
     Rf_error("this solver is already tracing a proof");
 
   const char *file = CHAR(STRING_ELT(path, 0));
-  FILE *f = fopen(file, "w");
+  /* "wb", not "w". On Windows text mode rewrites every \n as \r\n, and the
+     binary proof encoding emits raw bytes -- a variable-byte literal can be
+     0x0A -- so text mode silently corrupts the proof. CaDiCaL opens its own
+     proof files with "wb" for the same reason (File::write_file). Binary mode
+     is equally correct for the textual formats: they are written with \n
+     line endings, which every checker accepts. */
+  FILE *f = fopen(file, "wb");
   if (f == NULL)
     Rf_error("could not open '%s' for writing", file);
 

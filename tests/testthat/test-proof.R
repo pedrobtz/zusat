@@ -123,20 +123,75 @@ test_that("arguments are validated", {
   expect_error(sat_trace_proof(s, tempfile(), format = "tptp"))
 })
 
-test_that("a binary proof is written as bytes, not text", {
+test_that("a binary proof decodes to the same steps as the text one", {
+  # Checking only that some expected byte appears would pass on a proof
+  # corrupted by newline translation. Decoding the encoding is what catches
+  # it -- but only on a formula whose proof contains 0x0A in the first place,
+  # which the obvious tiny contradictions do not.
+  formula <- pigeonhole_formula(5L, 4L)
+
+  text_path <- tempfile(fileext = ".drat")
+  s1 <- sat_solver()
+  sat_trace_proof(s1, text_path, binary = FALSE)
+  sat_add(s1, formula)
+  expect_equal(sat_status(sat_solve(s1)), "unsat")
+  sat_close_proof(s1)
+
+  binary_path <- tempfile(fileext = ".drat")
+  s2 <- sat_solver()
+  sat_trace_proof(s2, binary_path, binary = TRUE)
+  sat_add(s2, formula)
+  expect_equal(sat_status(sat_solve(s2)), "unsat")
+  sat_close_proof(s2)
+
+  bytes <- readBin(binary_path, "raw", file.size(binary_path))
+  # the guard below is worthless if the proof has no byte to corrupt
+  expect_gt(sum(bytes == as.raw(0x0a)), 0L)
+
+  decoded <- decode_binary_drat(binary_path) # errors on a malformed stream
+  expect_equal(decoded, parse_text_drat(text_path))
+  expect_true(any(vapply(decoded, function(step) {
+    step$kind == "a" && length(step$literals) == 0L
+  }, logical(1)))) # the empty clause was derived
+})
+
+test_that("newline translation would be detected if it happened", {
+  # A negative control. Without it the test above passes whether or not the
+  # stream was opened in binary mode, which is exactly the bug it exists to
+  # catch: "w" instead of "wb" rewrites every 0x0A as 0x0D 0x0A on Windows.
   path <- tempfile(fileext = ".drat")
 
   s <- sat_solver()
   sat_trace_proof(s, path, binary = TRUE)
-  sat_add(s, list(1, -1))
+  sat_add(s, pigeonhole_formula(5L, 4L))
   sat_solve(s)
   sat_close_proof(s)
 
-  expect_gt(file.size(path), 0L)
-  raw_bytes <- readBin(path, "raw", file.size(path))
-  # the binary encoding uses byte markers ('a' = 0x61 for an addition) that
-  # the text format never emits on its own
-  expect_true(any(raw_bytes == as.raw(0x61)))
+  clean <- decode_binary_drat(path)
+
+  corrupted_path <- tempfile(fileext = ".drat")
+  writeBin(simulate_crlf_translation(readBin(path, "raw", file.size(path))),
+           corrupted_path)
+
+  corrupted <- tryCatch(decode_binary_drat(corrupted_path),
+                        error = function(e) NULL)
+  expect_false(identical(corrupted, clean))
+})
+
+test_that("a proof written on this platform has no translated newlines", {
+  path <- tempfile(fileext = ".drat")
+
+  s <- sat_solver()
+  sat_trace_proof(s, path, binary = TRUE)
+  sat_add(s, pigeonhole_formula(5L, 4L))
+  sat_solve(s)
+  sat_close_proof(s)
+
+  bytes <- readBin(path, "raw", file.size(path))
+  for (i in which(bytes == as.raw(0x0d))) {
+    expect_false(i < length(bytes) && bytes[i + 1L] == as.raw(0x0a))
+  }
+  expect_silent(decode_binary_drat(path))
 })
 
 test_that("an abandoned proof is closed when the solver is collected", {
