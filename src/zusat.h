@@ -19,6 +19,10 @@ SEXP zusat_constrain(SEXP xptr, SEXP lits);
 SEXP zusat_constraint_failed(SEXP xptr);
 SEXP zusat_fixed(SEXP xptr, SEXP lits);
 SEXP zusat_simplify(SEXP xptr);
+SEXP zusat_trace_proof(SEXP xptr, SEXP path);
+SEXP zusat_close_proof(SEXP xptr);
+SEXP zusat_tracing_proof(SEXP xptr);
+SEXP zusat_conclude(SEXP xptr);
 SEXP zusat_signature(void);
 
 #endif /* ZUSAT_H */

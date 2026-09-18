@@ -17,6 +17,10 @@ static const R_CallMethodDef CallEntries[] = {
   {"zusat_constraint_failed",(DL_FUNC) &zusat_constraint_failed,1},
   {"zusat_fixed",            (DL_FUNC) &zusat_fixed,            2},
   {"zusat_simplify",         (DL_FUNC) &zusat_simplify,         1},
+  {"zusat_trace_proof",      (DL_FUNC) &zusat_trace_proof,      2},
+  {"zusat_close_proof",      (DL_FUNC) &zusat_close_proof,      1},
+  {"zusat_tracing_proof",    (DL_FUNC) &zusat_tracing_proof,    1},
+  {"zusat_conclude",         (DL_FUNC) &zusat_conclude,         1},
   {"zusat_signature",  (DL_FUNC) &zusat_signature,  0},
   {NULL, NULL, 0}
 };
