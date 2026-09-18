@@ -220,16 +220,27 @@ and by default you are taking the solver's word for it. A proof turns that
 into something an independent tool can check, trusting neither zusat nor
 CaDiCaL:
 
-Build the clause list once, so the same clauses go to the solver and to a
-file a checker can read:
+For the proof to be checkable, the file a checker reads must contain *every*
+clause the proof relies on. That rules out adding the exactly-one constraints
+through `sat_exactly()` here: its clauses go into the solver, not into any
+list we hold. Written out by hand they need no auxiliary variables at all —
+at two colours, exactly-one is one "at least one" clause and one "not both"
+clause per vertex — so the same list can go to both:
 
 ```{r}
 colouring_clauses <- function(n_colours, edges, n_vertices) {
   vc <- function(v, c) (v - 1L) * n_colours + c
   clauses <- list()
 
-  # adjacent vertices differ
-  for (i in seq_len(nrow(edges))) {
+  for (v in seq_len(n_vertices)) {
+    lits <- vapply(seq_len(n_colours), function(c) vc(v, c), numeric(1))
+    clauses <- c(clauses, list(lits))                        # at least one
+    for (pair in utils::combn(n_colours, 2, simplify = FALSE)) {
+      clauses <- c(clauses, list(c(-lits[pair[1]], -lits[pair[2]])))  # not both
+    }
+  }
+
+  for (i in seq_len(nrow(edges))) {                          # adjacent differ
     for (c in seq_len(n_colours)) {
       clauses <- c(clauses, list(c(-vc(edges[i, 1], c), -vc(edges[i, 2], c))))
     }
@@ -237,40 +248,43 @@ colouring_clauses <- function(n_colours, edges, n_vertices) {
   clauses
 }
 
+two_colours <- colouring_clauses(2, edges, 10)
+length(two_colours)
+```
+
+Now the solver and the file see exactly the same formula:
+
+```{r}
 proof <- tempfile(fileext = ".drat")
 cnf <- tempfile(fileext = ".cnf")
 
 s4 <- sat_solver()            # empty: tracing records the whole derivation
 sat_trace_proof(s4, proof)    # so it must start before any clause
 
-# exactly-one is a cardinality constraint, added through the solver because
-# its encoding needs auxiliary variables
-for (v in 1:10) {
-  sat_exactly(s4, vapply(1:2, function(c) (v - 1L) * 2L + c, numeric(1)), 1)
-}
-edge_clauses <- colouring_clauses(2, edges, 10)
-sat_add(s4, edge_clauses)
-
+sat_add(s4, two_colours)
 sat_status(sat_solve(s4))
 sat_close_proof(s4)           # the proof is incomplete until this returns
 
-length(readLines(proof))
+write_dimacs(two_colours, cnf)
+c(clauses = length(readLines(cnf)) - 1L, proof_steps = length(readLines(proof)))
 ```
 
-`write_dimacs()` puts the formula where a checker can read it. Note the
-caveat: this writes the clauses we built by hand, not the auxiliary clauses
-`sat_exactly()` added, so for a checkable pair you would encode the
-cardinality constraint into the same list rather than through the solver.
-
-```{r}
-write_dimacs(edge_clauses, cnf)
-length(readLines(cnf))
-```
+Hand those two files to any DRAT checker:
 
 ```sh
 drat-trim problem.cnf problem.drat
+#> c 15 of 50 clauses in core
+#> c 2 of 22 lemmas in core using 20 resolution steps
 #> s VERIFIED
 ```
+
+That is the whole point of the section. The claim "no two-colouring exists"
+is now checkable by a program that has never heard of zusat or CaDiCaL.
+
+The trade is visible in the code above: `sat_exactly()` is more convenient and
+picks a better encoding as the numbers grow, but its clauses live inside the
+solver. When you need a self-contained CNF to hand to another tool, build the
+list yourself.
 
 A satisfiable answer needs no proof, because the model *is* the evidence —
 you check it yourself, exactly as we did above.
