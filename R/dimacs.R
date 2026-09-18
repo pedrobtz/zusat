@@ -58,6 +58,16 @@ read_dimacs <- function(path) {
     stop(sprintf("%s contains a non-integer literal", basename(path)),
          call. = FALSE)
   }
+  # Range-checked before as.integer(), which would otherwise turn an oversized
+  # literal into NA with only a coercion warning -- the file would appear to
+  # read, and the failure would surface later from sat_add() with no mention
+  # of which file or token caused it.
+  if (any(!is.finite(values)) || any(abs(values) > max_var())) {
+    bad <- values[!is.finite(values) | abs(values) > max_var()][1]
+    stop(sprintf("%s contains literal %s, beyond the maximum variable index %d",
+                 basename(path), format(bad, scientific = FALSE), max_var()),
+         call. = FALSE)
+  }
   values <- as.integer(values)
 
   ends <- which(values == 0L)

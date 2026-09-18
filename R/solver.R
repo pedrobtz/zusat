@@ -1,6 +1,26 @@
+# The largest variable index the package accepts, read from the C header so
+# the two cannot drift. Cached: as_literals() runs once per clause, and a
+# .Call per clause would show up on a large formula.
+.zusat <- new.env(parent = emptyenv())
+
+max_var <- function() {
+  if (is.null(.zusat$max_var)) {
+    .zusat$max_var <- .Call(zusat_max_var_get)
+  }
+  .zusat$max_var
+}
+
 # Coerce to DIMACS literals, rejecting what as.integer() would otherwise
 # accept silently: "1" becomes 1L and 1.7 becomes 1L, so a typo in a formula
 # turns into a different formula rather than an error.
+#
+# Order matters. Non-finite values have to be rejected before the whole-number
+# test, because trunc(Inf) is Inf and so Inf satisfies it; left to reach
+# as.integer() they become NA and surface as "missing value where TRUE/FALSE
+# needed" from an unrelated comparison. The magnitude check has to come before
+# as.integer() for the same reason, and matters for a second reason: CaDiCaL
+# allocates variable arrays densely, so a stray large index kills the process
+# rather than raising.
 as_literals <- function(x, arg = "literals") {
   if (is.null(x)) {
     return(integer())
@@ -8,11 +28,21 @@ as_literals <- function(x, arg = "literals") {
   if (!is.numeric(x) || is.factor(x)) {
     stop(sprintf("`%s` must be numeric, not %s", arg, class(x)[1]), call. = FALSE)
   }
-  if (is.double(x) && any(x != trunc(x), na.rm = TRUE)) {
+  if (anyNA(x)) {
+    # is.na() is TRUE for NaN as well as NA
+    stop(sprintf("`%s` must not be NA", arg), call. = FALSE)
+  }
+  if (!all(is.finite(x))) {
+    stop(sprintf("`%s` must be finite", arg), call. = FALSE)
+  }
+  if (is.double(x) && any(x != trunc(x))) {
     stop(sprintf("`%s` must be whole numbers", arg), call. = FALSE)
   }
-  if (anyNA(x)) {
-    stop(sprintf("`%s` must not be NA", arg), call. = FALSE)
+  if (any(abs(x) > max_var())) {
+    stop(sprintf(paste0("`%s` must be at most %d in absolute value: CaDiCaL ",
+                        "allocates one slot per variable up to the largest ",
+                        "index used, so a larger one exhausts memory"),
+                 arg, max_var()), call. = FALSE)
   }
   x <- as.integer(x)
   if (any(x == 0L)) {
@@ -20,6 +50,22 @@ as_literals <- function(x, arg = "literals") {
          call. = FALSE)
   }
   x
+}
+
+# Variable numbers, as distinct from literals: positive, not negated.
+#
+# Deliberately not bounded against sat_n_vars(). Asking about a variable the
+# formula never constrains is meaningful -- it is free, so both polarities
+# extend every model -- and sat_solutions() relies on that to project onto
+# variables an encoding has not introduced yet. The solver reports no value
+# for such a variable, which sat_value() surfaces as NA.
+as_variables <- function(x, arg = "vars") {
+  v <- as_literals(x, arg)
+  if (any(v < 0L)) {
+    stop(sprintf("`%s` must be variable numbers, not negative literals", arg),
+         call. = FALSE)
+  }
+  v
 }
 
 #' Create a CaDiCaL solver
@@ -135,7 +181,9 @@ sat_solve.zusat_solver <- function(x, assumptions = integer(), ...) {
 #' @rdname sat_solve
 #' @export
 sat_solve.default <- function(x, assumptions = integer(), ...) {
-  if (!is.list(x)) {
+  # is.list() is TRUE for a data frame, so an accidental data frame -- or a
+  # zusat_solution, which is one -- would otherwise be solved column by column
+  if (is.data.frame(x) || !is.list(x)) {
     stop("`x` must be a list of clauses or a zusat_solver", call. = FALSE)
   }
   sat_solve(sat_solver(x), assumptions = assumptions, ...)
@@ -172,14 +220,16 @@ sat_failed <- function(solver, assumptions) {
 #' @param vars Numeric vector of variable indices. Defaults to every variable
 #'   the solver knows about.
 #' @return A logical vector the same length as `vars`. `NA` marks a variable
-#'   the solver left unassigned because either polarity extends the model.
+#'   carrying no value in this model: either the solver left it unassigned
+#'   because both polarities extend the model, or the formula never mentions
+#'   it at all.
 #' @export
 #' @examples
 #' s <- sat_solver(list(c(1, 2)))
 #' sat_solve(s)
 #' sat_value(s, 1:2)
 sat_value <- function(solver, vars = seq_len(sat_n_vars(solver))) {
-  .Call(zusat_value, solver, as.integer(vars))
+  .Call(zusat_value, solver, as_variables(vars))
 }
 
 #' Size of the formula a solver holds
@@ -228,10 +278,24 @@ sat_n_clauses <- function(solver) {
 #' sat_option(s, "elim")
 #' sat_option(s, "elim", 0)
 sat_option <- function(solver, name, value) {
-  if (missing(value)) {
-    return(.Call(zusat_get_option, solver, as.character(name)))
+  name <- as.character(name)
+  if (length(name) != 1L || is.na(name)) {
+    stop("`name` must be a single option name", call. = FALSE)
   }
-  .Call(zusat_set_option, solver, as.character(name), as.integer(value))
+  if (missing(value)) {
+    return(.Call(zusat_get_option, solver, name))
+  }
+  # CaDiCaL accepts an option change only while the solver is still being
+  # configured -- everything except these four, which affect reporting only.
+  # Without this the caller gets a contract violation reported against
+  # CaDiCaL's own function and file names.
+  if (!name %in% c("log", "quiet", "report", "verbose") &&
+      !.Call(zusat_configuring, solver)) {
+    stop(sprintf(paste0("option '%s' can only be set on a freshly created ",
+                        "solver, before any clause is added or solved"), name),
+         call. = FALSE)
+  }
+  .Call(zusat_set_option, solver, name, as.integer(value))
   invisible(value)
 }
 

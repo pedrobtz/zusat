@@ -2,7 +2,7 @@ CaDiCaL vendored from https://github.com/arminbiere/cadical.git
 version: 3.0.1
 ref:     rel-3.0.1
 commit:  c60730422e758ef1cebe7aeddf2dda31c996bf04
-date:    2026-09-17
+date:    2026-09-18
 
 Regenerate with: tools/vendor-cadical.sh rel-3.0.1
 Local modifications: applied by tools/vendor/patch-for-r.sh, which reroutes
