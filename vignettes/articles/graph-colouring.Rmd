@@ -274,7 +274,6 @@ Hand those two files to any DRAT checker:
 ```sh
 drat-trim problem.cnf problem.drat
 #> c 15 of 50 clauses in core
-#> c 2 of 22 lemmas in core using 20 resolution steps
 #> s VERIFIED
 ```
 
