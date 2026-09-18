@@ -1,0 +1,376 @@
+# Modelling a problem as SAT
+
+``` r
+
+library(zusat)
+```
+
+The API of a SAT solver is small and the documentation for it is short.
+The hard part is somewhere else: taking a question you actually care
+about and turning it into clauses. This article works through one
+problem end to end — colouring a graph — because it exercises nearly
+everything the package does and because the modelling decisions it
+forces are the same ones every SAT encoding forces.
+
+## Variables are just integers
+
+zusat speaks DIMACS, which means a variable is a positive integer and a
+literal is that integer, optionally negated. There are no variable
+names, no types, no dimensions. If your problem is about vertices and
+colours, you have to decide for yourself which integer means “vertex 3
+has colour 2”.
+
+That decision is most of the work, and the reliable way to make it is to
+allocate variables in blocks and write a function that indexes into
+them:
+
+``` r
+
+n_vertices <- 10
+n_colours <- 3
+
+# variable for "vertex v has colour c"
+vc <- function(v, c) (v - 1L) * n_colours + c
+```
+
+`vc()` maps the pair `(v, c)` onto `1:(n_vertices * n_colours)` with no
+gaps and no collisions. Everything downstream depends on that being
+right, so it is worth checking rather than assuming:
+
+``` r
+
+ids <- as.vector(outer(seq_len(n_vertices), seq_len(n_colours), vc))
+c(distinct = length(unique(ids)), expected = n_vertices * n_colours,
+  max = max(ids))
+#> distinct expected      max 
+#>       30       30       30
+```
+
+Getting this wrong is the single most common way to produce a
+confidently incorrect answer. An index function that collides silently
+encodes a *different problem*, the solver answers that one correctly,
+and nothing anywhere reports an error.
+
+## The graph
+
+The Petersen graph: ten vertices, fifteen edges, and a standard example
+precisely because it resists the obvious guesses.
+
+``` r
+
+edges <- rbind(
+  # outer pentagon
+  c(1, 2), c(2, 3), c(3, 4), c(4, 5), c(5, 1),
+  # spokes
+  c(1, 6), c(2, 7), c(3, 8), c(4, 9), c(5, 10),
+  # inner pentagram
+  c(6, 8), c(8, 10), c(10, 7), c(7, 9), c(9, 6)
+)
+nrow(edges)
+#> [1] 15
+```
+
+## Encoding the constraints
+
+A proper colouring is two conditions. Each vertex gets exactly one
+colour, and no edge joins two vertices of the same colour.
+
+The first is a cardinality constraint, and
+[`sat_exactly()`](https://pedrobtz.github.io/zusat/reference/cardinality.md)
+encodes it. The second is a plain clause per edge per colour: not both
+endpoints can take colour `c`.
+
+``` r
+
+colouring_solver <- function(n_colours, edges, n_vertices) {
+  vc <- function(v, c) (v - 1L) * n_colours + c
+  s <- sat_solver()
+
+  # exactly one colour per vertex
+  for (v in seq_len(n_vertices)) {
+    sat_exactly(s, vapply(seq_len(n_colours), function(c) vc(v, c), numeric(1)), 1)
+  }
+
+  # adjacent vertices differ
+  for (i in seq_len(nrow(edges))) {
+    u <- edges[i, 1]
+    w <- edges[i, 2]
+    for (c in seq_len(n_colours)) {
+      sat_add(s, c(-vc(u, c), -vc(w, c)))
+    }
+  }
+
+  s
+}
+
+s <- colouring_solver(3, edges, 10)
+s
+#> <zusat_solver> cadical-3.0.1
+#>   variables:      30
+#>   active clauses: 85
+```
+
+The variable count in that print is exactly `10 * 3 = 30`, which is
+worth noticing:
+[`sat_exactly()`](https://pedrobtz.github.io/zusat/reference/cardinality.md)
+added no variables of its own. With three literals per constraint,
+forbidding every pair is three clauses, so `"auto"` used the pairwise
+encoding. Push the numbers up and it switches to a counter that does
+introduce auxiliaries — which is where the next section comes in.
+
+## Solving and decoding
+
+``` r
+
+sol <- sat_solve(s)
+sat_status(sol)
+#> [1] "sat"
+```
+
+A solution is a data frame of `variable` and `value`, which is
+deliberately not yet an answer to *our* question. Decoding is the mirror
+of the encoding:
+
+``` r
+
+decode <- function(solver, n_colours, n_vertices) {
+  vc <- function(v, c) (v - 1L) * n_colours + c
+  vapply(seq_len(n_vertices), function(v) {
+    lits <- vapply(seq_len(n_colours), function(c) vc(v, c), numeric(1))
+    which(sat_value(solver, lits))[1]
+  }, numeric(1))
+}
+
+colouring <- decode(s, 3, 10)
+colouring
+#>  [1] 3 2 3 2 1 2 3 1 1 2
+```
+
+Never trust that without checking it. The encoding could be wrong, the
+decoding could be wrong, and both failures look like a plausible answer:
+
+``` r
+
+all(vapply(seq_len(nrow(edges)), function(i) {
+  colouring[edges[i, 1]] != colouring[edges[i, 2]]
+}, logical(1)))
+#> [1] TRUE
+```
+
+## Enumerating answers, and why projection matters
+
+There is rarely only one solution, and
+[`sat_solutions()`](https://pedrobtz.github.io/zusat/reference/sat_solutions.md)
+finds more:
+
+``` r
+
+s2 <- colouring_solver(3, edges, 10)
+ours <- seq_len(10 * 3)
+
+projected <- sat_solutions(s2, vars = ours, limit = 200)
+sat_n_solutions(projected)
+#> [1] 120
+sat_complete(projected)
+#> [1] TRUE
+```
+
+120 is the right answer: it is the Petersen graph’s chromatic polynomial
+evaluated at three.
+
+Here `vars` changes nothing, because this encoding introduced no
+auxiliary variables to project away. It starts to matter as soon as one
+does. Compare the two encodings of the same constraint:
+
+``` r
+
+pairwise <- sat_solver()
+sat_at_most(pairwise, 1:6, 2, encoding = "pairwise")
+
+sequential <- sat_solver()
+sat_at_most(sequential, 1:6, 2, encoding = "sequential")
+
+c(pairwise = sat_n_vars(pairwise), sequential = sat_n_vars(sequential))
+#>   pairwise sequential 
+#>          6         16
+```
+
+The counter needs variables of its own, and models differing only in
+those are the same answer repeated. Enumerated over everything, they are
+counted separately; projected onto the six literals we care about, they
+are not:
+
+``` r
+
+c(
+  everything = sat_n_solutions(sat_solutions(sequential, limit = 500)),
+  projected = sat_n_solutions(sat_solutions(
+    sat_solver() |> (\(s) {sat_at_most(s, 1:6, 2, encoding = "sequential"); s})(),
+    vars = 1:6, limit = 500
+  ))
+)
+#> everything  projected 
+#>         80         22
+```
+
+The projected figure is the number of ways to choose at most two of six,
+which is `choose(6,0) + choose(6,1) + choose(6,2)`. Get into the habit
+of passing `vars`: the moment an encoding grows auxiliaries, an
+unprojected count stops answering your question and nothing warns you.
+
+[`sat_complete()`](https://pedrobtz.github.io/zusat/reference/sat_n_solutions.md)
+is worth reading every time. An enumeration stopped at `limit` looks
+exactly like an exhaustive one, and the difference between “there are
+120 answers” and “there are at least 120 answers” is usually the thing
+you wanted to know.
+
+## Proving there is no answer
+
+The Petersen graph needs three colours. Ask for two and the solver says
+so:
+
+``` r
+
+s3 <- colouring_solver(2, edges, 10)
+sat_status(sat_solve(s3))
+#> [1] "unsat"
+```
+
+`"unsat"` is a strong claim — not “I did not find one” but “none exists”
+— and by default you are taking the solver’s word for it. A proof turns
+that into something an independent tool can check, trusting neither
+zusat nor CaDiCaL:
+
+For the proof to be checkable, the file a checker reads must contain
+*every* clause the proof relies on. That rules out adding the
+exactly-one constraints through
+[`sat_exactly()`](https://pedrobtz.github.io/zusat/reference/cardinality.md)
+here: its clauses go into the solver, not into any list we hold. Written
+out by hand they need no auxiliary variables at all — at two colours,
+exactly-one is one “at least one” clause and one “not both” clause per
+vertex — so the same list can go to both:
+
+``` r
+
+colouring_clauses <- function(n_colours, edges, n_vertices) {
+  vc <- function(v, c) (v - 1L) * n_colours + c
+  clauses <- list()
+
+  for (v in seq_len(n_vertices)) {
+    lits <- vapply(seq_len(n_colours), function(c) vc(v, c), numeric(1))
+    clauses <- c(clauses, list(lits))                        # at least one
+    for (pair in utils::combn(n_colours, 2, simplify = FALSE)) {
+      clauses <- c(clauses, list(c(-lits[pair[1]], -lits[pair[2]])))  # not both
+    }
+  }
+
+  for (i in seq_len(nrow(edges))) {                          # adjacent differ
+    for (c in seq_len(n_colours)) {
+      clauses <- c(clauses, list(c(-vc(edges[i, 1], c), -vc(edges[i, 2], c))))
+    }
+  }
+  clauses
+}
+
+two_colours <- colouring_clauses(2, edges, 10)
+length(two_colours)
+#> [1] 50
+```
+
+Now the solver and the file see exactly the same formula:
+
+``` r
+
+proof <- tempfile(fileext = ".drat")
+cnf <- tempfile(fileext = ".cnf")
+
+s4 <- sat_solver()            # empty: tracing records the whole derivation
+sat_trace_proof(s4, proof)    # so it must start before any clause
+
+sat_add(s4, two_colours)
+sat_status(sat_solve(s4))
+#> [1] "unsat"
+sat_close_proof(s4)           # the proof is incomplete until this returns
+
+write_dimacs(two_colours, cnf)
+c(clauses = length(readLines(cnf)) - 1L, proof_steps = length(readLines(proof)))
+#>     clauses proof_steps 
+#>          50          21
+```
+
+Hand those two files to any DRAT checker:
+
+``` sh
+drat-trim problem.cnf problem.drat
+#> c 15 of 50 clauses in core
+#> s VERIFIED
+```
+
+That is the whole point of the section. The claim “no two-colouring
+exists” is now checkable by a program that has never heard of zusat or
+CaDiCaL.
+
+The trade is visible in the code above:
+[`sat_exactly()`](https://pedrobtz.github.io/zusat/reference/cardinality.md)
+is more convenient and picks a better encoding as the numbers grow, but
+its clauses live inside the solver. When you need a self-contained CNF
+to hand to another tool, build the list yourself.
+
+A satisfiable answer needs no proof, because the model *is* the evidence
+— you check it yourself, exactly as we did above.
+
+## Finding the chromatic number
+
+Put those pieces together and the chromatic number falls out of a loop:
+
+``` r
+
+chromatic_number <- function(edges, n_vertices, max_colours = 6) {
+  for (k in seq_len(max_colours)) {
+    s <- colouring_solver(k, edges, n_vertices)
+    if (sat_is_sat(sat_solve(s))) {
+      return(k)
+    }
+  }
+  NA_integer_
+}
+
+chromatic_number(edges, 10)
+#> [1] 3
+```
+
+Each iteration builds a fresh solver, which is the right call here
+because the formula changes shape with `k`. When a search adds
+constraints to a *fixed* formula — tightening a bound, fixing a decision
+— reuse one solver and let it keep what it has learned.
+
+## Guarding against a runaway solve
+
+Colouring gets hard quickly, and a solver given a hard instance does not
+return. Anywhere a hang is unacceptable, bound the search:
+
+``` r
+
+s5 <- colouring_solver(3, edges, 10)
+sat_limit(s5, "conflicts", 10000)
+
+sol5 <- sat_solve(s5)
+sat_status(sol5)
+#> [1] "sat"
+```
+
+If that returns `"unknown"`, the solver gave up inside its budget. It is
+not a weaker `"unsat"` and must not be read as one — the question is
+still open.
+
+## What to take from this
+
+The solver is the easy part. The parts worth care are the ones where a
+mistake produces a confident wrong answer rather than an error:
+
+- an index function that collides encodes a different problem;
+- a decoded answer that nobody checks against the original constraints;
+- an enumeration truncated at `limit` and read as exhaustive;
+- `"unknown"` read as `"unsat"`.
+
+Each has a cheap guard, and this article uses all four.

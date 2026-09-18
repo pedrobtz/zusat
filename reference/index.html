@@ -16,6 +16,10 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/graph-colouring.html">Modelling a problem as SAT</a></li>
+  </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -32,9 +36,97 @@
     </div>
 
     <div class="section level2">
-      <h2 id="all-functions">All functions<a class="anchor" aria-label="anchor" href="#all-functions"></a></h2>
+      <h2 id="solving">Solving<a class="anchor" aria-label="anchor" href="#solving"></a></h2>
+
+      <div class="section-desc"><p>Solve a formula directly, or build one up incrementally.</p></div>
+
+      <dl></dl></div><div class="section level2">
 
 
+
+
+      <dl><dt>
+
+          <code><a href="sat_solver.html">sat_solver()</a></code>
+
+        </dt>
+        <dd>Create a CaDiCaL solver</dd>
+
+        <dt>
+
+          <code><a href="sat_add.html">sat_add()</a></code>
+
+        </dt>
+        <dd>Add clauses to a solver</dd>
+
+        <dt>
+
+          <code><a href="sat_solve.html">sat_solve()</a></code>
+
+        </dt>
+        <dd>Solve a formula</dd>
+
+        <dt>
+
+          <code><a href="sat_solutions.html">sat_solutions()</a></code>
+
+        </dt>
+        <dd>Enumerate satisfying assignments</dd>
+      </dl></div><div class="section level2">
+      <h2 id="reading-results">Reading results<a class="anchor" aria-label="anchor" href="#reading-results"></a></h2>
+
+      <div class="section-desc"><p>The outcome of a solve, and the model behind it.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="sat_status.html">sat_status()</a></code> <code><a href="sat_status.html">sat_is_sat()</a></code>
+
+        </dt>
+        <dd>The outcome of a solve</dd>
+
+        <dt>
+
+          <code><a href="sat_assignment.html">sat_assignment()</a></code>
+
+        </dt>
+        <dd>A solution as a named logical vector</dd>
+
+        <dt>
+
+          <code><a href="sat_value.html">sat_value()</a></code>
+
+        </dt>
+        <dd>Read variable assignments directly from a solver</dd>
+
+        <dt>
+
+          <code><a href="sat_n_solutions.html">sat_n_solutions()</a></code> <code><a href="sat_n_solutions.html">sat_complete()</a></code>
+
+        </dt>
+        <dd>Number of solutions found, and whether that is all of them</dd>
+
+        <dt>
+
+          <code><a href="zusat_solution.html">zusat_solution</a></code>
+
+        </dt>
+        <dd>The result of a solve</dd>
+
+        <dt>
+
+          <code><a href="zusat_solutions.html">zusat_solutions</a></code>
+
+        </dt>
+        <dd>The result of an enumeration</dd>
+      </dl></div><div class="section level2">
+      <h2 id="cardinality-constraints">Cardinality constraints<a class="anchor" aria-label="anchor" href="#cardinality-constraints"></a></h2>
+
+      <div class="section-desc"><p>At most, at least, or exactly k of a set of literals – the constraints most real models are built from.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -47,41 +139,29 @@
 
         </dt>
         <dd>Cardinality constraints</dd>
+      </dl></div><div class="section level2">
+      <h2 id="steering-the-search">Steering the search<a class="anchor" aria-label="anchor" href="#steering-the-search"></a></h2>
+
+      <div class="section-desc"><p>Assumptions, temporary constraints, resource limits and what the solver has already proved.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="sat_failed.html">sat_failed()</a></code>
+
+        </dt>
+        <dd>Which assumptions caused unsatisfiability</dd>
 
         <dt>
 
-          <code><a href="read_dimacs.html">read_dimacs()</a></code>
+          <code><a href="sat_limit.html">sat_limit()</a></code>
 
         </dt>
-        <dd>Read a formula from a DIMACS CNF file</dd>
-
-        <dt>
-
-          <code><a href="sat_add.html">sat_add()</a></code>
-
-        </dt>
-        <dd>Add clauses to a solver</dd>
-
-        <dt>
-
-          <code><a href="sat_assignment.html">sat_assignment()</a></code>
-
-        </dt>
-        <dd>A solution as a named logical vector</dd>
-
-        <dt>
-
-          <code><a href="sat_close_proof.html">sat_close_proof()</a></code>
-
-        </dt>
-        <dd>Finish writing a proof</dd>
-
-        <dt>
-
-          <code><a href="sat_conclude.html">sat_conclude()</a></code>
-
-        </dt>
-        <dd>Write the concluding proof step</dd>
+        <dd>Bound how hard a solve may work</dd>
 
         <dt>
 
@@ -99,59 +179,10 @@
 
         <dt>
 
-          <code><a href="sat_failed.html">sat_failed()</a></code>
-
-        </dt>
-        <dd>Which assumptions caused unsatisfiability</dd>
-
-        <dt>
-
           <code><a href="sat_fixed.html">sat_fixed()</a></code>
 
         </dt>
         <dd>Literals the solver has proved outright</dd>
-
-        <dt>
-
-          <code><a href="sat_is_tracing.html">sat_is_tracing()</a></code>
-
-        </dt>
-        <dd>Is this solver recording a proof?</dd>
-
-        <dt>
-
-          <code><a href="sat_limit.html">sat_limit()</a></code>
-
-        </dt>
-        <dd>Bound how hard a solve may work</dd>
-
-        <dt>
-
-          <code><a href="sat_n_solutions.html">sat_n_solutions()</a></code> <code><a href="sat_n_solutions.html">sat_complete()</a></code>
-
-        </dt>
-        <dd>Number of solutions found, and whether that is all of them</dd>
-
-        <dt>
-
-          <code><a href="sat_n_vars.html">sat_n_vars()</a></code> <code><a href="sat_n_vars.html">sat_n_clauses()</a></code>
-
-        </dt>
-        <dd>Size of the formula a solver holds</dd>
-
-        <dt>
-
-          <code><a href="sat_option.html">sat_option()</a></code>
-
-        </dt>
-        <dd>Get or set a CaDiCaL option</dd>
-
-        <dt>
-
-          <code><a href="sat_signature.html">sat_signature()</a></code>
-
-        </dt>
-        <dd>Version of the bundled CaDiCaL</dd>
 
         <dt>
 
@@ -162,33 +193,21 @@
 
         <dt>
 
-          <code><a href="sat_solutions.html">sat_solutions()</a></code>
+          <code><a href="sat_option.html">sat_option()</a></code>
 
         </dt>
-        <dd>Enumerate satisfying assignments</dd>
+        <dd>Get or set a CaDiCaL option</dd>
+      </dl></div><div class="section level2">
+      <h2 id="proofs">Proofs<a class="anchor" aria-label="anchor" href="#proofs"></a></h2>
 
-        <dt>
+      <div class="section-desc"><p>Make an unsatisfiability claim checkable by an independent tool.</p></div>
 
-          <code><a href="sat_solve.html">sat_solve()</a></code>
+      <dl></dl></div><div class="section level2">
 
-        </dt>
-        <dd>Solve a formula</dd>
 
-        <dt>
 
-          <code><a href="sat_solver.html">sat_solver()</a></code>
 
-        </dt>
-        <dd>Create a CaDiCaL solver</dd>
-
-        <dt>
-
-          <code><a href="sat_status.html">sat_status()</a></code> <code><a href="sat_status.html">sat_is_sat()</a></code>
-
-        </dt>
-        <dd>The outcome of a solve</dd>
-
-        <dt>
+      <dl><dt>
 
           <code><a href="sat_trace_proof.html">sat_trace_proof()</a></code>
 
@@ -197,10 +216,40 @@
 
         <dt>
 
-          <code><a href="sat_value.html">sat_value()</a></code>
+          <code><a href="sat_close_proof.html">sat_close_proof()</a></code>
 
         </dt>
-        <dd>Read variable assignments directly from a solver</dd>
+        <dd>Finish writing a proof</dd>
+
+        <dt>
+
+          <code><a href="sat_is_tracing.html">sat_is_tracing()</a></code>
+
+        </dt>
+        <dd>Is this solver recording a proof?</dd>
+
+        <dt>
+
+          <code><a href="sat_conclude.html">sat_conclude()</a></code>
+
+        </dt>
+        <dd>Write the concluding proof step</dd>
+      </dl></div><div class="section level2">
+      <h2 id="files-and-metadata">Files and metadata<a class="anchor" aria-label="anchor" href="#files-and-metadata"></a></h2>
+
+
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="read_dimacs.html">read_dimacs()</a></code>
+
+        </dt>
+        <dd>Read a formula from a DIMACS CNF file</dd>
 
         <dt>
 
@@ -211,19 +260,27 @@
 
         <dt>
 
-          <code><a href="zusat_solution.html">zusat_solution</a></code>
+          <code><a href="sat_n_vars.html">sat_n_vars()</a></code> <code><a href="sat_n_vars.html">sat_n_clauses()</a></code>
 
         </dt>
-        <dd>The result of a solve</dd>
+        <dd>Size of the formula a solver holds</dd>
 
         <dt>
 
-          <code><a href="zusat_solutions.html">zusat_solutions</a></code>
+          <code><a href="sat_signature.html">sat_signature()</a></code>
 
         </dt>
-        <dd>The result of an enumeration</dd>
+        <dd>Version of the bundled CaDiCaL</dd>
+
+        <dt>
+
+          <code><a href="zusat-package.html">zusat</a></code> <code><a href="zusat-package.html">zusat-package</a></code>
+
+        </dt>
+        <dd>zusat: Boolean satisfiability with CaDiCaL</dd>
       </dl></div>
-  </main></div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">

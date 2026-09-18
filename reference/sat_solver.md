@@ -42,7 +42,7 @@ to solve.
 ``` r
 s <- sat_solver(list(c(1, 2), c(-1, 2)))
 sat_solve(s)
-#> <zusat_solution> sat  (2 variables, 2 active clauses, 0.001s)
+#> <zusat_solution> sat  (2 variables, 2 active clauses, 0.000s)
 #>  variable value
 #>         1  TRUE
 #>         2  TRUE
