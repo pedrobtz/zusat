@@ -8,8 +8,16 @@
   Add clauses to a solver
 - [`sat_assignment()`](https://pedrobtz.github.io/zusat/reference/sat_assignment.md)
   : A solution as a named logical vector
+- [`sat_constrain()`](https://pedrobtz.github.io/zusat/reference/sat_constrain.md)
+  : Add a clause that holds for one solve only
+- [`sat_constraint_failed()`](https://pedrobtz.github.io/zusat/reference/sat_constraint_failed.md)
+  : Did the constraint cause unsatisfiability?
 - [`sat_failed()`](https://pedrobtz.github.io/zusat/reference/sat_failed.md)
   : Which assumptions caused unsatisfiability
+- [`sat_fixed()`](https://pedrobtz.github.io/zusat/reference/sat_fixed.md)
+  : Literals the solver has proved outright
+- [`sat_limit()`](https://pedrobtz.github.io/zusat/reference/sat_limit.md)
+  : Bound how hard a solve may work
 - [`sat_n_solutions()`](https://pedrobtz.github.io/zusat/reference/sat_n_solutions.md)
   [`sat_complete()`](https://pedrobtz.github.io/zusat/reference/sat_n_solutions.md)
   : Number of solutions found, and whether that is all of them
@@ -20,6 +28,8 @@
   : Get or set a CaDiCaL option
 - [`sat_signature()`](https://pedrobtz.github.io/zusat/reference/sat_signature.md)
   : Version of the bundled CaDiCaL
+- [`sat_simplify()`](https://pedrobtz.github.io/zusat/reference/sat_simplify.md)
+  : Simplify a formula without solving it
 - [`sat_solutions()`](https://pedrobtz.github.io/zusat/reference/sat_solutions.md)
   : Enumerate satisfying assignments
 - [`sat_solve()`](https://pedrobtz.github.io/zusat/reference/sat_solve.md)

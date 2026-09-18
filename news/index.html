@@ -39,6 +39,12 @@
 <code><a href="../reference/sat_solve.html">sat_solve()</a></code> solves a formula or an incremental solver, returning a type-stable data frame of variable assignments.</li>
 <li>
 <code><a href="../reference/sat_solutions.html">sat_solutions()</a></code> enumerates models, with <code>vars</code> to project onto the variables that matter.</li>
+<li>
+<code><a href="../reference/read_dimacs.html">read_dimacs()</a></code> and <code><a href="../reference/write_dimacs.html">write_dimacs()</a></code> for the format every solver and benchmark set speaks.</li>
+<li>
+<code><a href="../reference/sat_limit.html">sat_limit()</a></code> bounds how hard a solve may work, so a solve can return <code>"unknown"</code> rather than running indefinitely.</li>
+<li>
+<code><a href="../reference/sat_constrain.html">sat_constrain()</a></code> adds a clause for one solve only; <code><a href="../reference/sat_fixed.html">sat_fixed()</a></code> reports literals proved at the root; <code><a href="../reference/sat_simplify.html">sat_simplify()</a></code> runs inprocessing alone.</li>
 </ul></div>
   </main></div>
 
