@@ -173,7 +173,7 @@ sat_at_most <- function(solver, literals, k, encoding = c("auto", "pairwise",
                                                           "sequential")) {
   literals <- as_literals(literals)
   encoding <- match.arg(encoding)
-  k <- check_bound(k, length(literals))
+  k <- check_bound(k)
 
   add_at_most(solver, literals, k, encoding)
 }
@@ -185,7 +185,7 @@ sat_at_least <- function(solver, literals, k, encoding = c("auto", "pairwise",
   literals <- as_literals(literals)
   encoding <- match.arg(encoding)
   n <- length(literals)
-  k <- check_bound(k, n)
+  k <- check_bound(k)
 
   if (k == 0L) {
     return(invisible(solver)) # always satisfied
@@ -206,22 +206,40 @@ sat_exactly <- function(solver, literals, k, encoding = c("auto", "pairwise",
   literals <- as_literals(literals)
   encoding <- match.arg(encoding)
   n <- length(literals)
-  k <- check_bound(k, n)
+  k <- check_bound(k)
 
   sat_at_least(solver, literals, k, encoding = encoding)
   sat_at_most(solver, literals, k, encoding = encoding)
   invisible(solver)
 }
 
-check_bound <- function(k, n) {
-  if (!is.numeric(k) || length(k) != 1L || is.na(k)) {
+check_bound <- function(k) {
+  if (!is.numeric(k) || length(k) != 1L) {
     stop("`k` must be a single number", call. = FALSE)
+  }
+  if (is.na(k)) {
+    # is.na() is TRUE for NaN as well as NA
+    stop("`k` must not be NA", call. = FALSE)
+  }
+  # Infinite values must be rejected here and not later. trunc(Inf) is Inf, so
+  # the whole-number check below passes them, and they then reach as.integer()
+  # where they become NA with a coercion warning -- surfacing as "missing
+  # value where TRUE/FALSE needed" from an unrelated comparison rather than as
+  # the documented validation error.
+  if (!is.finite(k)) {
+    stop("`k` must be finite", call. = FALSE)
   }
   if (k != trunc(k)) {
     stop("`k` must be a whole number", call. = FALSE)
   }
   if (k < 0) {
     stop("`k` must not be negative", call. = FALSE)
+  }
+  # Same failure, one step later: anything above the integer range coerces to
+  # NA. A bound that large is meaningless anyway -- no formula has that many
+  # literals -- so refuse it rather than silently mangle it.
+  if (k > .Machine$integer.max) {
+    stop(sprintf("`k` must be at most %d", .Machine$integer.max), call. = FALSE)
   }
   as.integer(k)
 }

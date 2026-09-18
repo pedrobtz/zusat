@@ -211,3 +211,36 @@ test_that("bounds are validated", {
   expect_error(sat_at_most(s, c(1, 0), 1), "must not contain 0")
   expect_error(sat_at_most(s, 1:3, 1, encoding = "magic"))
 })
+
+test_that("non-finite and out-of-range bounds are rejected", {
+  # These reached as.integer() and became NA, so the failure surfaced as
+  # "missing value where TRUE/FALSE needed" from an unrelated comparison,
+  # with a coercion warning attached, instead of a validation error.
+  # trunc(Inf) is Inf, which is why the whole-number check let Inf past.
+  s <- sat_solver()
+
+  for (build in list(sat_at_most, sat_at_least, sat_exactly)) {
+    expect_error(build(s, 1:3, Inf), "must be finite")
+    expect_error(build(s, 1:3, -Inf), "must be finite")
+    expect_error(build(s, 1:3, NaN), "must not be NA")
+    expect_error(build(s, 1:3, NA_real_), "must not be NA")
+    expect_error(build(s, 1:3, NA_integer_), "must not be NA")
+    expect_error(build(s, 1:3, 3e9), "at most 2147483647")
+    expect_error(build(s, 1:3, 2^31), "at most 2147483647")
+  }
+})
+
+test_that("rejected bounds do not warn on the way out", {
+  # the coercion warning was a symptom of the value getting further than it
+  # should have; a clean validation error emits nothing
+  s <- sat_solver()
+  expect_silent(try(sat_at_most(s, 1:3, Inf), silent = TRUE))
+  expect_silent(try(sat_at_most(s, 1:3, 3e9), silent = TRUE))
+})
+
+test_that("the largest usable bound is still accepted", {
+  # the boundary itself must work, not just fail politely one past it
+  s <- sat_solver()
+  expect_silent(sat_at_most(s, 1:3, .Machine$integer.max))
+  expect_equal(sat_n_clauses(s), 0) # k >= n, so nothing is added
+})
