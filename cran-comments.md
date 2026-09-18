@@ -13,7 +13,7 @@
 
 ```
 * checking CRAN incoming feasibility ... NOTE
-Maintainer: 'Pedro Batista <pedrobtz@gmail.com>'
+Maintainer: 'Pedro Baltazar <pedrobtz@gmail.com>'
 New submission
 ```
 

@@ -2,7 +2,7 @@ Package: zusat
 Title: Boolean Satisfiability Solving with 'CaDiCaL'
 Version: 0.1.0
 Authors@R: c(
-    person("Pedro", "Batista", , "pedrobtz@gmail.com", role = c("aut", "cre", "cph")),
+    person("Pedro", "Baltazar", , "pedrobtz@gmail.com", role = c("aut", "cre", "cph")),
     person("Armin", "Biere", role = "cph",
            comment = "Author of the bundled CaDiCaL solver"),
     person("Mathias", "Fleury", role = "cph",

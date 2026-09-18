@@ -74,11 +74,11 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Pedro Batista \email{pedrobtz@gmail.com} [copyright holder]
+\strong{Maintainer}: Pedro Baltazar \email{pedrobtz@gmail.com} [copyright holder]
 
 Authors:
 \itemize{
-  \item Pedro Batista \email{pedrobtz@gmail.com} [copyright holder]
+  \item Pedro Baltazar \email{pedrobtz@gmail.com} [copyright holder]
 }
 
 Other contributors:
