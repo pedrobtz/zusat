@@ -24,8 +24,10 @@ sat_value(solver, vars = seq_len(sat_n_vars(solver)))
 
 ## Value
 
-A logical vector the same length as `vars`. `NA` marks a variable the
-solver left unassigned because either polarity extends the model.
+A logical vector the same length as `vars`. `NA` marks a variable
+carrying no value in this model: either the solver left it unassigned
+because both polarities extend the model, or the formula never mentions
+it at all.
 
 ## Examples
 
