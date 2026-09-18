@@ -71,14 +71,17 @@ sat_solutions.zusat_solver <- function(x, limit = 1000, vars = NULL,
   assumptions <- as_literals(assumptions, "assumptions")
 
   if (!is.null(vars)) {
-    vars <- as_literals(vars, "vars")
-    if (any(vars < 0)) {
-      stop("`vars` must be variable numbers, not negative literals", call. = FALSE)
-    }
+    vars <- as_variables(vars, "vars")
+    # A repeated variable would be reported once per occurrence and blocked
+    # redundantly, inflating the row count without changing the answer set.
+    vars <- unique(vars)
   }
 
   found <- list()
-  status <- "unsat"
+  # Not "unsat": with limit = 0 the loop never runs and nothing has been
+  # established, so claiming unsatisfiability would be a result we never
+  # computed. The first solve overwrites this with what it actually found.
+  status <- "unknown"
   complete <- TRUE
 
   while (length(found) < limit) {
@@ -113,8 +116,9 @@ sat_solutions.zusat_solver <- function(x, limit = 1000, vars = NULL,
     sat_add(x, ifelse(value, -this_vars, this_vars))
   }
 
-  if (length(found) >= limit && limit > 0) {
+  if (length(found) >= limit) {
     # Stopped at the cap; whether more exist is unknown without another solve.
+    # This covers limit = 0 too, where nothing was even attempted.
     complete <- FALSE
   }
 

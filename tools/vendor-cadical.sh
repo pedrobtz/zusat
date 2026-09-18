@@ -88,12 +88,34 @@ grep -oE '^[[:space:]]*run [a-zA-Z0-9_.-]+ [0-9]+' "$RUN_SH" |
   echo "  \$(NULL)"
 } > "$DEST/objects.mk"
 
-cat > "$DEST/VENDORED" <<EOT
+# Provenance record, written beside the manifest rather than inside
+# src/cadical/.
+#
+# The vendor guard treats every path under src/cadical/ as vendored source, and
+# this file is not: it is our own description of the tree, not part of it. Kept
+# there, any edit to it read as a source change with stale digests -- including
+# the edit that stopped it changing spuriously. Everything describing the
+# vendored tree now lives in tools/vendor/, so the guard's rule is true rather
+# than approximately true.
+#
+# Provenance only -- deliberately no date.
+#
+# A date would record when this script ran, which is not a property of the
+# vendored code: the commit hash pins the upstream state exactly, and ref and
+# version say the rest. It was also the only thing that made a re-vendor of
+# the same ref look like a source change, because the guard in
+# .github/workflows/vendor.yml counts everything under src/cadical/ as
+# source -- so a no-op re-run demanded manifest.tsv and checksums.sha256 be
+# regenerated to record nothing, putting a meaningless diff in the two files
+# whose value is that their diffs mean something.
+#
+# Without it, two runs of this script on the same ref produce byte-identical
+# trees, so it can be re-run and diffed to confirm nothing has drifted.
+cat > "$PKG_ROOT/tools/vendor/VENDORED" <<EOT
 CaDiCaL vendored from $REPO
 version: $VERSION
 ref:     $REF
 commit:  $COMMIT
-date:    $(date -u +%Y-%m-%d)
 
 Regenerate with: tools/vendor-cadical.sh $REF
 Local modifications: applied by tools/vendor/patch-for-r.sh, which reroutes
@@ -122,7 +144,7 @@ mkdir -p "$PKG_ROOT/tools/vendor"
 # Checksums are recorded over paths relative to the package root and sorted,
 # so the file is reproducible regardless of where the script was run from.
 ( cd "$PKG_ROOT" && find src/cadical inst/extdata/cadical -type f \
-    ! -name 'objects.mk' ! -name 'VENDORED' \
+    ! -name 'objects.mk' \
     | LC_ALL=C sort | xargs "$SHA_SUM" ) > "$CHECKSUMS"
 
 echo "Vendored CaDiCaL $VERSION ($COMMIT) into src/cadical/"

@@ -60,25 +60,32 @@ HEADER
 # inside whichever object includes them -- which is how the symbols reach
 # collect.o and solver.o without appearing in any .cpp.
 #
+# Spacing is matched with \s* rather than a literal space, and exit with any
+# status rather than 1, because upstream is free to write printf( or exit (2)
+# at any release. Both the rewrite and the end-state guard below used to
+# require exactly one space, so that form would have passed both and reached
+# R CMD check as a WARNING -- drift the guard exists to catch and could not
+# structurally see.
+#
 # perl runs in slurp mode (-0777) because several calls are split across
 # lines. The [^;]*? guard keeps a match inside one statement so a non-greedy
 # wildcard cannot run past the call it belongs to. Trailing backslashes in
 # macro bodies survive: \s* stops at a backslash, so the continuation stays.
 rewrite_one () {
   perl -0777 -pi -e '
-    s/\bvfprintf \(stderr,\s*/REvprintf (/g;
-    s/\bvfprintf \(stdout,\s*/Rvprintf (/g;
-    s/\bfprintf \(stderr,\s*/REprintf (/g;
-    s/\bfprintf \(stdout,\s*/Rprintf (/g;
-    s/\bfputs \(([^;]*?),\s*stdout\)/Rprintf ("%s", $1)/gs;
-    s/\bfputs \(([^;]*?),\s*stderr\)/REprintf ("%s", $1)/gs;
-    s/\bfputc \(([^;]*?),\s*stdout\)/Rprintf ("%c", $1)/gs;
-    s/\bfputc \(([^;]*?),\s*stderr\)/REprintf ("%c", $1)/gs;
-    s/\bfflush \(stdout\)/((void) 0)/g;
-    s/\bfflush \(stderr\)/((void) 0)/g;
-    s/(?<![_[:alnum:]])printf \(/Rprintf (/g;
-    s/(?<![_[:alnum:]])abort \(\)/ZUSAT_FATAL ("aborted")/g;
-    s/(?<![_[:alnum:]])exit \(1\)/ZUSAT_FATAL ("fatal error")/g;
+    s/\bvfprintf\s*\(stderr,\s*/REvprintf (/g;
+    s/\bvfprintf\s*\(stdout,\s*/Rvprintf (/g;
+    s/\bfprintf\s*\(stderr,\s*/REprintf (/g;
+    s/\bfprintf\s*\(stdout,\s*/Rprintf (/g;
+    s/\bfputs\s*\(([^;]*?),\s*stdout\)/Rprintf ("%s", $1)/gs;
+    s/\bfputs\s*\(([^;]*?),\s*stderr\)/REprintf ("%s", $1)/gs;
+    s/\bfputc\s*\(([^;]*?),\s*stdout\)/Rprintf ("%c", $1)/gs;
+    s/\bfputc\s*\(([^;]*?),\s*stderr\)/REprintf ("%c", $1)/gs;
+    s/\bfflush\s*\(stdout\)/((void) 0)/g;
+    s/\bfflush\s*\(stderr\)/((void) 0)/g;
+    s/(?<![_[:alnum:]])printf\s*\(/Rprintf (/g;
+    s/(?<![_[:alnum:]])abort\s*\(\)/ZUSAT_FATAL ("aborted")/g;
+    s/(?<![_[:alnum:]])exit\s*\(\d+\)/ZUSAT_FATAL ("fatal error")/g;
   ' "$1"
 }
 
@@ -133,12 +140,12 @@ check_absent () {
     fail=1
   fi
 }
-check_absent '(^|[^_[:alnum:]])printf \(' 'bare printf'
-check_absent '(^|[^_[:alnum:]])abort \(\)' 'abort()'
-check_absent '(^|[^_[:alnum:]])exit \(1\)' 'exit(1)'
-check_absent '(fputs|fputc|fprintf) \([^;]*(stdout|stderr)' 'stdio write to stdout/stderr'
+check_absent '(^|[^_[:alnum:]])printf[[:space:]]*\(' 'bare printf'
+check_absent '(^|[^_[:alnum:]])abort[[:space:]]*\(\)' 'abort()'
+check_absent '(^|[^_[:alnum:]])exit[[:space:]]*\([0-9]+\)' 'exit()'
+check_absent '(fputs|fputc|fprintf)[[:space:]]*\([^;]*(stdout|stderr)' 'stdio write to stdout/stderr'
 check_absent 'Terminal (tout|terr) \((stdout|stderr)\)' 'Terminal on a std stream'
-check_absent '(fflush|vfprintf) \((stdout|stderr)' 'fflush/vfprintf on a std stream'
+check_absent '(fflush|vfprintf)[[:space:]]*\((stdout|stderr)' 'fflush/vfprintf on a std stream'
 check_absent '[=!]= *(stdout|stderr)' 'comparison against a std stream'
 [ "$fail" -eq 0 ] || { echo "patch-for-r: rewrite incomplete" >&2; exit 1; }
 

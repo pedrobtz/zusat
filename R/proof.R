@@ -79,9 +79,13 @@ sat_trace_proof <- function(solver, path, format = c("drat", "lrat"),
   if (!is.logical(binary) || length(binary) != 1L || is.na(binary)) {
     stop("`binary` must be TRUE or FALSE", call. = FALSE)
   }
-  if (sat_n_vars(solver) > 0L) {
-    stop("start tracing before adding clauses: CaDiCaL can only trace a ",
-         "complete proof from a freshly created solver", call. = FALSE)
+  # Ask the solver its actual state rather than inferring it from the variable
+  # count: a solve on an empty solver leaves that at 0 while still moving the
+  # solver out of CONFIGURING, so the count-based test let that case through
+  # to CaDiCaL -- which aborted, and leaked the file this function had opened.
+  if (!.Call(zusat_configuring, solver)) {
+    stop("start tracing before adding clauses or solving: CaDiCaL can only ",
+         "trace a complete proof from a freshly created solver", call. = FALSE)
   }
 
   # Format and encoding are options, and like tracing itself they have to be

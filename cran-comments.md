@@ -31,7 +31,7 @@ The licence is reproduced in `inst/CADICAL_LICENSE`, the authors are listed as
 copyright holders in `Authors@R`, and `inst/COPYRIGHTS` records what is
 bundled and under what terms.
 
-`src/cadical/VENDORED` records the exact upstream commit, and
+`tools/vendor/VENDORED` records the exact upstream commit, and
 `tools/vendor-cadical.sh` regenerates the tree from it. `tools/vendor/verify`
 checks the tree against a recorded manifest and per-file checksums, so the
 bundled sources can be confirmed to match upstream.

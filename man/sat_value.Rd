@@ -14,7 +14,9 @@ the solver knows about.}
 }
 \value{
 A logical vector the same length as \code{vars}. \code{NA} marks a variable
-the solver left unassigned because either polarity extends the model.
+carrying no value in this model: either the solver left it unassigned
+because both polarities extend the model, or the formula never mentions
+it at all.
 }
 \description{
 A lower-level alternative to the data frame returned by \code{\link[=sat_solve]{sat_solve()}},

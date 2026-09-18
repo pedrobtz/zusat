@@ -5,6 +5,17 @@
 # added, removed, or edited since tools/vendor-cadical.sh last ran.
 set -eu
 
+# Fix the collation for everything below, not just the sorts.
+#
+# The file lists are compared with comm, which requires both inputs sorted in
+# the collation comm itself uses. Sorting with LC_ALL=C while comm ran under
+# the ambient locale made it treat correctly sorted input as unsorted: two
+# stray build artefacts were enough to have it report src/cadical/*.cpp files
+# as unrecorded when they were recorded. A guard that invents findings is one
+# people stop reading.
+LC_ALL=C
+export LC_ALL
+
 # macOS ships `shasum`, most Linux images ship `sha256sum`, and CI may have
 # either. Pick whichever exists rather than assuming.
 if command -v sha256sum >/dev/null 2>&1; then
@@ -38,7 +49,7 @@ trap 'rm -f "$recorded" "$present"' EXIT
 
 sed -e 's/^[0-9a-f]*  //' "$CHECKSUMS" | LC_ALL=C sort > "$recorded"
 find src/cadical inst/extdata/cadical -type f \
-  ! -name 'objects.mk' ! -name 'VENDORED' \
+  ! -name 'objects.mk' \
   | LC_ALL=C sort > "$present"
 
 if ! extra="$(comm -13 "$recorded" "$present")" || [ -n "$extra" ]; then

@@ -171,7 +171,7 @@ NULL
 #' @export
 sat_at_most <- function(solver, literals, k, encoding = c("auto", "pairwise",
                                                           "sequential")) {
-  literals <- as_literals(literals)
+  literals <- check_distinct(as_literals(literals))
   encoding <- match.arg(encoding)
   k <- check_bound(k)
 
@@ -182,7 +182,7 @@ sat_at_most <- function(solver, literals, k, encoding = c("auto", "pairwise",
 #' @export
 sat_at_least <- function(solver, literals, k, encoding = c("auto", "pairwise",
                                                            "sequential")) {
-  literals <- as_literals(literals)
+  literals <- check_distinct(as_literals(literals))
   encoding <- match.arg(encoding)
   n <- length(literals)
   k <- check_bound(k)
@@ -203,7 +203,7 @@ sat_at_least <- function(solver, literals, k, encoding = c("auto", "pairwise",
 #' @export
 sat_exactly <- function(solver, literals, k, encoding = c("auto", "pairwise",
                                                           "sequential")) {
-  literals <- as_literals(literals)
+  literals <- check_distinct(as_literals(literals))
   encoding <- match.arg(encoding)
   n <- length(literals)
   k <- check_bound(k)
@@ -211,6 +211,19 @@ sat_exactly <- function(solver, literals, k, encoding = c("auto", "pairwise",
   sat_at_least(solver, literals, k, encoding = encoding)
   sat_at_most(solver, literals, k, encoding = encoding)
   invisible(solver)
+}
+
+# A cardinality constraint counts distinct variables. A repeated one makes
+# the pairwise encoding emit a clause like (-1 | -1), a unit forcing that
+# variable false, which is nobody's intent and fails silently: the formula
+# simply loses solutions. c(1, -1) is the same problem by another route.
+check_distinct <- function(literals, arg = "literals") {
+  dup <- anyDuplicated(abs(literals))
+  if (dup) {
+    stop(sprintf("`%s` must not repeat a variable; variable %d appears twice",
+                 arg, abs(literals)[dup]), call. = FALSE)
+  }
+  literals
 }
 
 check_bound <- function(k) {

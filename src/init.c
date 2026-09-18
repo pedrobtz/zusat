@@ -21,6 +21,8 @@ static const R_CallMethodDef CallEntries[] = {
   {"zusat_close_proof",      (DL_FUNC) &zusat_close_proof,      1},
   {"zusat_tracing_proof",    (DL_FUNC) &zusat_tracing_proof,    1},
   {"zusat_conclude",         (DL_FUNC) &zusat_conclude,         1},
+  {"zusat_max_var_get",      (DL_FUNC) &zusat_max_var_get,      0},
+  {"zusat_configuring",      (DL_FUNC) &zusat_configuring,      1},
   {"zusat_signature",  (DL_FUNC) &zusat_signature,  0},
   {NULL, NULL, 0}
 };

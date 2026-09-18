@@ -15,5 +15,13 @@ Copyright (c) 2022-2026 Katalin Fazekas, Vienna University of Technology, Austri
 Copyright (c) 2021-2026 Armin Biere, University of Freiburg, Germany
 Copyright (c) 2021-2026 Mathias Fleury, University of Freiburg, Germany
 
-See src/cadical/VENDORED for the exact upstream commit and the command used
-to regenerate the vendored tree.
+Vendored from https://github.com/arminbiere/cadical.git at tag rel-3.0.1,
+commit c60730422e758ef1cebe7aeddf2dda31c996bf04.
+
+The sources are modified during vendoring to suit R: output and fatal paths
+are rerouted to R's C API, and the fork/exec compressed-file code is compiled
+out. tools/vendor/patch-for-r.sh in the package's source repository performs
+those rewrites and records what each one does; tools/vendor/VENDORED,
+manifest.tsv and checksums.sha256 there record the provenance and let the
+tree be verified against it. Those files are development tooling and are not
+shipped in this tarball.
