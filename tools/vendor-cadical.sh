@@ -88,6 +88,19 @@ grep -oE '^[[:space:]]*run [a-zA-Z0-9_.-]+ [0-9]+' "$RUN_SH" |
   echo "  \$(NULL)"
 } > "$DEST/objects.mk"
 
+# Provenance only -- deliberately no date.
+#
+# A date would record when this script ran, which is not a property of the
+# vendored code: the commit hash pins the upstream state exactly, and ref and
+# version say the rest. It was also the only thing that made a re-vendor of
+# the same ref look like a source change, because the guard in
+# .github/workflows/vendor.yml counts everything under src/cadical/ as
+# source -- so a no-op re-run demanded manifest.tsv and checksums.sha256 be
+# regenerated to record nothing, putting a meaningless diff in the two files
+# whose value is that their diffs mean something.
+#
+# Without it, two runs of this script on the same ref produce byte-identical
+# trees, so it can be re-run and diffed to confirm nothing has drifted.
 cat > "$DEST/VENDORED" <<EOT
 CaDiCaL vendored from $REPO
 version: $VERSION
@@ -95,15 +108,6 @@ ref:     $REF
 commit:  $COMMIT
 
 Regenerate with: tools/vendor-cadical.sh $REF
-
-No date is recorded here on purpose. It would say when this script ran, which
-is not a property of the vendored code -- the commit hash pins the upstream
-state exactly, and ref and version say the rest. It was also the only thing
-that made a re-vendor of the same ref look like a source change: the guard in
-.github/workflows/vendor.yml counts everything under src/cadical/ as source,
-so a no-op re-run demanded that manifest.tsv and checksums.sha256 be
-regenerated to record nothing. Without it, re-running this script on the same
-ref reproduces the tree byte for byte.
 Local modifications: applied by tools/vendor/patch-for-r.sh, which reroutes
 CaDiCaL's output and fatal paths to R's C API and compiles out the fork/exec
 pipe code. See that script for what each rewrite does and why. The rest of
