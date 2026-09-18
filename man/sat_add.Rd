@@ -2,25 +2,27 @@
 % Please edit documentation in R/solver.R
 \name{sat_add}
 \alias{sat_add}
-\title{Add a clause to a solver}
+\title{Add clauses to a solver}
 \usage{
-sat_add(solver, literals)
+sat_add(solver, x)
 }
 \arguments{
 \item{solver}{A \code{zusat_solver} from \code{\link[=sat_solver]{sat_solver()}}.}
 
-\item{literals}{Integer vector of non-zero literals. An empty vector adds
-the empty clause, which makes the formula unsatisfiable.}
+\item{x}{Either one clause, as a numeric vector of non-zero literals, or
+several, as a list of such vectors. An empty vector is the empty clause,
+which makes the formula unsatisfiable.}
 }
 \value{
 \code{solver}, invisibly, so calls can be chained.
 }
 \description{
-Clauses use DIMACS conventions: a positive integer \code{i} is the literal
-"variable i is true", a negative integer \code{-i} is its negation. Do not
-include a terminating zero; that is added internally.
+Clauses use DIMACS conventions: a positive number \code{i} is the literal
+"variable i is true", a negative number \code{-i} is its negation. No
+terminating zero is needed; it is added internally.
 }
 \examples{
 s <- sat_solver()
-sat_add(s, c(1L, -2L))
+sat_add(s, c(1, -2))                    # one clause
+sat_add(s, list(c(2, 3), c(-1, 3)))     # several
 }

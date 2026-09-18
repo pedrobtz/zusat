@@ -178,6 +178,14 @@ SEXP zusat_get_option(SEXP xptr, SEXP name) {
   return Rf_ScalarInteger(ccadical_get_option(s, CHAR(STRING_ELT(name, 0))));
 }
 
+SEXP zusat_n_clauses(SEXP xptr) {
+  /* irredundant() counts the original (non-learnt) clauses still active --
+     the closest CaDiCaL offers to "how big is the formula". Learnt clauses
+     are deliberately excluded: they are an artefact of search, not input. */
+  double n = (double) ccadical_irredundant(solver_from(xptr));
+  return Rf_ScalarReal(n);
+}
+
 SEXP zusat_n_vars(SEXP xptr) {
   return Rf_ScalarInteger(ccadical_vars(solver_from(xptr)));
 }
