@@ -1,5 +1,5 @@
 # Changelog
 
-## zusat (development version)
+## zusat 0.0.0.9000
 
-- Initial CRAN submission.
+- Initial version: R bindings for the bundled CaDiCaL SAT solver.

@@ -6,5 +6,15 @@
 <url><loc>https://pedrobtz.github.io/zusat/index.html</loc></url>
 <url><loc>https://pedrobtz.github.io/zusat/news/index.html</loc></url>
 <url><loc>https://pedrobtz.github.io/zusat/reference/index.html</loc></url>
+<url><loc>https://pedrobtz.github.io/zusat/reference/sat_add.html</loc></url>
+<url><loc>https://pedrobtz.github.io/zusat/reference/sat_add_all.html</loc></url>
+<url><loc>https://pedrobtz.github.io/zusat/reference/sat_failed.html</loc></url>
+<url><loc>https://pedrobtz.github.io/zusat/reference/sat_model.html</loc></url>
+<url><loc>https://pedrobtz.github.io/zusat/reference/sat_n_vars.html</loc></url>
+<url><loc>https://pedrobtz.github.io/zusat/reference/sat_option.html</loc></url>
+<url><loc>https://pedrobtz.github.io/zusat/reference/sat_signature.html</loc></url>
+<url><loc>https://pedrobtz.github.io/zusat/reference/sat_solve.html</loc></url>
+<url><loc>https://pedrobtz.github.io/zusat/reference/sat_solver.html</loc></url>
+<url><loc>https://pedrobtz.github.io/zusat/reference/zusat-package.html</loc></url>
 </urlset>
 
