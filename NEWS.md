@@ -14,3 +14,5 @@
 * `sat_at_most()`, `sat_at_least()` and `sat_exactly()` encode cardinality
   constraints, choosing between a pairwise and a sequential-counter encoding
   automatically.
+* `sat_trace_proof()` and `sat_close_proof()` record a DRAT or LRAT proof of
+  unsatisfiability, checkable by external tools such as `drat-trim`.

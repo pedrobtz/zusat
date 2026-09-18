@@ -212,6 +212,36 @@ sat_option(s, "elim")        # read
 sat_option(s, "elim", 0)     # disable bounded variable elimination
 ```
 
+## Proofs of unsatisfiability
+
+When a solver says `"unsat"`, you are taking its word for it. A proof makes
+the claim checkable by an independent tool — nothing about zusat, CaDiCaL or
+this binding has to be trusted for the check to mean something.
+
+``` r
+path <- tempfile(fileext = ".drat")
+
+s <- sat_solver()            # must be empty: tracing records the whole
+sat_trace_proof(s, path)     # derivation, so it starts before the clauses
+sat_add(s, clauses)
+sat_solve(s)                 #> "unsat"
+sat_close_proof(s)           # the proof is incomplete until this returns
+```
+
+Then check it with whatever you like:
+
+``` sh
+drat-trim problem.cnf problem.drat
+#> s VERIFIED
+```
+
+A satisfiable formula needs no proof — the model is the evidence, and
+`sat_assignment()` hands it to you.
+
+`format = "lrat"` records the antecedents of every step, so a checker
+verifies it by lookup instead of re-deriving anything: bigger files, much
+faster and simpler checking.
+
 ## Interrupting
 
 Long solves respond to Ctrl-C. The solver stops at its next safe point and

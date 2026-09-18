@@ -1,35 +1,111 @@
 #include "zusat.h"
 #include "cadical/ccadical.h"
 
+#include <stdio.h>
+
 /* ------------------------------------------------------------------ */
 /* Solver handle                                                       */
+/*                                                                     */
+/* The handle carries the proof file as well as the solver, because    */
+/* CaDiCaL does not take ownership of it: Solver::trace_proof wraps    */
+/* the FILE* in a File constructed with close_file = 0, so closing is  */
+/* ours to do. Keeping the two together is what lets the finalizer     */
+/* close an abandoned proof rather than leaking the descriptor and     */
+/* leaving a truncated file behind.                                    */
+
+typedef struct {
+  CCaDiCaL *solver;
+  FILE *proof; /* NULL unless tracing; owned here, not by CaDiCaL */
+} zusat_handle;
+
+static zusat_handle *handle_from(SEXP xptr) {
+  if (TYPEOF(xptr) != EXTPTRSXP)
+    Rf_error("invalid solver handle");
+  zusat_handle *h = (zusat_handle *) R_ExternalPtrAddr(xptr);
+  if (h == NULL)
+    Rf_error("solver handle is no longer valid");
+  return h;
+}
+
+static CCaDiCaL *solver_from(SEXP xptr) {
+  return handle_from(xptr)->solver;
+}
 
 static void zusat_finalize(SEXP xptr) {
-  CCaDiCaL *s = (CCaDiCaL *) R_ExternalPtrAddr(xptr);
-  if (s != NULL) {
-    ccadical_release(s);
+  zusat_handle *h = (zusat_handle *) R_ExternalPtrAddr(xptr);
+  if (h != NULL) {
+    if (h->proof != NULL) {
+      /* Flush CaDiCaL's side before closing ours, or the tail of the proof
+         is lost. Do not report errors from a finalizer. */
+      ccadical_close_proof(h->solver);
+      fclose(h->proof);
+      h->proof = NULL;
+    }
+    ccadical_release(h->solver);
+    free(h);
     R_ClearExternalPtr(xptr);
   }
 }
 
-static CCaDiCaL *solver_from(SEXP xptr) {
-  if (TYPEOF(xptr) != EXTPTRSXP)
-    Rf_error("invalid solver handle");
-  CCaDiCaL *s = (CCaDiCaL *) R_ExternalPtrAddr(xptr);
-  if (s == NULL)
-    Rf_error("solver handle is no longer valid");
-  return s;
-}
-
 SEXP zusat_solver_new(void) {
-  CCaDiCaL *s = ccadical_init();
-  if (s == NULL)
+  zusat_handle *h = (zusat_handle *) calloc(1, sizeof(zusat_handle));
+  if (h == NULL)
+    Rf_error("could not allocate solver handle");
+  h->solver = ccadical_init();
+  if (h->solver == NULL) {
+    free(h);
     Rf_error("could not allocate CaDiCaL solver");
-  SEXP xptr = PROTECT(R_MakeExternalPtr(s, Rf_install("zusat_solver"), R_NilValue));
+  }
+  SEXP xptr = PROTECT(R_MakeExternalPtr(h, Rf_install("zusat_solver"), R_NilValue));
   R_RegisterCFinalizerEx(xptr, zusat_finalize, TRUE);
   Rf_setAttrib(xptr, R_ClassSymbol, Rf_mkString("zusat_solver"));
   UNPROTECT(1);
   return xptr;
+}
+
+/* ------------------------------------------------------------------ */
+/* Proof tracing                                                       */
+
+SEXP zusat_trace_proof(SEXP xptr, SEXP path) {
+  zusat_handle *h = handle_from(xptr);
+  if (TYPEOF(path) != STRSXP || XLENGTH(path) != 1)
+    Rf_error("proof path must be a single string");
+  if (h->proof != NULL)
+    Rf_error("this solver is already tracing a proof");
+
+  const char *file = CHAR(STRING_ELT(path, 0));
+  FILE *f = fopen(file, "w");
+  if (f == NULL)
+    Rf_error("could not open '%s' for writing", file);
+
+  /* CaDiCaL requires state CONFIGURING here: tracing must start before any
+     clause is added, or the proof records only part of the derivation. The
+     R layer enforces that; this is the last line of defence. */
+  if (!ccadical_trace_proof(h->solver, f, file)) {
+    fclose(f);
+    Rf_error("could not start proof tracing to '%s'", file);
+  }
+  h->proof = f;
+  return R_NilValue;
+}
+
+SEXP zusat_close_proof(SEXP xptr) {
+  zusat_handle *h = handle_from(xptr);
+  if (h->proof == NULL)
+    Rf_error("this solver is not tracing a proof");
+  ccadical_close_proof(h->solver);
+  fclose(h->proof);
+  h->proof = NULL;
+  return R_NilValue;
+}
+
+SEXP zusat_tracing_proof(SEXP xptr) {
+  return Rf_ScalarLogical(handle_from(xptr)->proof != NULL);
+}
+
+SEXP zusat_conclude(SEXP xptr) {
+  ccadical_conclude(solver_from(xptr));
+  return R_NilValue;
 }
 
 /* ------------------------------------------------------------------ */
