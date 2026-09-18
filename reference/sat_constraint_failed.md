@@ -30,7 +30,7 @@ A single logical.
 s <- sat_solver(list(1))
 sat_constrain(s, -1)
 sat_solve(s)
-#> <zusat_solution> unsat  (1 variable, 0 active clauses, 0.000s)
+#> <zusat_solution> unsat  (1 variable, 0 active clauses, 0.001s)
 sat_constraint_failed(s)
 #> [1] TRUE
 ```

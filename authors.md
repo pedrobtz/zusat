@@ -2,7 +2,7 @@
 
 ## Authors
 
-- **Pedro Batista**. Author, maintainer.
+- **Pedro Baltazar**. Author, maintainer, copyright holder.
 
 - **Armin Biere**. Copyright holder.  
   Author of the bundled CaDiCaL solver
@@ -21,13 +21,14 @@
 Source:
 [`DESCRIPTION`](https://github.com/pedrobtz/zusat/blob/main/DESCRIPTION)
 
-Batista P (2026). *zusat: R Bindings for the 'CaDiCaL' SAT Solver*. R
-package version 0.0.0.9000, <https://pedrobtz.github.io/zusat/>.
+Baltazar P (2026). *zusat: Boolean Satisfiability Solving with
+'CaDiCaL'*. R package version 0.1.0,
+<https://pedrobtz.github.io/zusat/>.
 
     @Manual{,
-      title = {zusat: R Bindings for the 'CaDiCaL' SAT Solver},
-      author = {Pedro Batista},
+      title = {zusat: Boolean Satisfiability Solving with 'CaDiCaL'},
+      author = {Pedro Baltazar},
       year = {2026},
-      note = {R package version 0.0.0.9000},
+      note = {R package version 0.1.0},
       url = {https://pedrobtz.github.io/zusat/},
     }

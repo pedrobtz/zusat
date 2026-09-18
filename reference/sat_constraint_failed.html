@@ -11,7 +11,7 @@ the constraint-level counterpart of sat_failed().'></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">zusat</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -70,7 +70,7 @@ the constraint-level counterpart of <code><a href="sat_failed.html">sat_failed()
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="sat_solver.html">sat_solver</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="sat_constrain.html">sat_constrain</a></span><span class="op">(</span><span class="va">s</span>, <span class="op">-</span><span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="sat_solve.html">sat_solve</a></span><span class="op">(</span><span class="va">s</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;zusat_solution&gt; unsat  (1 variable, 0 active clauses, 0.000s)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;zusat_solution&gt; unsat  (1 variable, 0 active clauses, 0.001s)</span>
 <span class="r-in"><span><span class="fu">sat_constraint_failed</span><span class="op">(</span><span class="va">s</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 </code></pre></div>
@@ -80,7 +80,7 @@ the constraint-level counterpart of <code><a href="sat_failed.html">sat_failed()
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Pedro Batista.</p>
+  <p>Developed by Pedro Baltazar.</p>
 </div>
 
 <div class="pkgdown-footer-right">

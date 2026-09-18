@@ -11,6 +11,13 @@ the package itself and a C++ compiler.
 
 ``` r
 
+install.packages("zusat")
+```
+
+Or the development version from GitHub:
+
+``` r
+
 # install.packages("pak")
 pak::pak("pedrobtz/zusat")
 ```

@@ -1,8 +1,9 @@
 # Changelog
 
-## zusat 0.0.0.9000
+## zusat 0.1.0
 
-- Initial version: R bindings for the bundled CaDiCaL SAT solver.
+- First release. Solves Boolean satisfiability problems with a bundled
+  copy of the CaDiCaL solver, so no external solver is required.
 - [`sat_solve()`](https://pedrobtz.github.io/zusat/reference/sat_solve.md)
   solves a formula or an incremental solver, returning a type-stable
   data frame of variable assignments.

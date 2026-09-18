@@ -96,11 +96,11 @@ Useful links:
 
 ## Author
 
-**Maintainer**: Pedro Batista <pedrobtz@gmail.com>
+**Maintainer**: Pedro Baltazar <pedrobtz@gmail.com> \[copyright holder\]
 
 Authors:
 
-- Pedro Batista <pedrobtz@gmail.com>
+- Pedro Baltazar <pedrobtz@gmail.com> \[copyright holder\]
 
 Other contributors:
 
