@@ -5,6 +5,10 @@ description: >
   variables, encoding constraints, enumerating answers, and proving that no
   answer exists.
 output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Modelling a problem as SAT}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r, include = FALSE}
