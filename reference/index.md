@@ -12,6 +12,10 @@
   Add clauses to a solver
 - [`sat_assignment()`](https://pedrobtz.github.io/zusat/reference/sat_assignment.md)
   : A solution as a named logical vector
+- [`sat_close_proof()`](https://pedrobtz.github.io/zusat/reference/sat_close_proof.md)
+  : Finish writing a proof
+- [`sat_conclude()`](https://pedrobtz.github.io/zusat/reference/sat_conclude.md)
+  : Write the concluding proof step
 - [`sat_constrain()`](https://pedrobtz.github.io/zusat/reference/sat_constrain.md)
   : Add a clause that holds for one solve only
 - [`sat_constraint_failed()`](https://pedrobtz.github.io/zusat/reference/sat_constraint_failed.md)
@@ -20,6 +24,8 @@
   : Which assumptions caused unsatisfiability
 - [`sat_fixed()`](https://pedrobtz.github.io/zusat/reference/sat_fixed.md)
   : Literals the solver has proved outright
+- [`sat_is_tracing()`](https://pedrobtz.github.io/zusat/reference/sat_is_tracing.md)
+  : Is this solver recording a proof?
 - [`sat_limit()`](https://pedrobtz.github.io/zusat/reference/sat_limit.md)
   : Bound how hard a solve may work
 - [`sat_n_solutions()`](https://pedrobtz.github.io/zusat/reference/sat_n_solutions.md)
@@ -43,6 +49,8 @@
 - [`sat_status()`](https://pedrobtz.github.io/zusat/reference/sat_status.md)
   [`sat_is_sat()`](https://pedrobtz.github.io/zusat/reference/sat_status.md)
   : The outcome of a solve
+- [`sat_trace_proof()`](https://pedrobtz.github.io/zusat/reference/sat_trace_proof.md)
+  : Record a proof of unsatisfiability
 - [`sat_value()`](https://pedrobtz.github.io/zusat/reference/sat_value.md)
   : Read variable assignments directly from a solver
 - [`write_dimacs()`](https://pedrobtz.github.io/zusat/reference/write_dimacs.md)

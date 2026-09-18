@@ -28,3 +28,8 @@
   [`sat_exactly()`](https://pedrobtz.github.io/zusat/reference/cardinality.md)
   encode cardinality constraints, choosing between a pairwise and a
   sequential-counter encoding automatically.
+- [`sat_trace_proof()`](https://pedrobtz.github.io/zusat/reference/sat_trace_proof.md)
+  and
+  [`sat_close_proof()`](https://pedrobtz.github.io/zusat/reference/sat_close_proof.md)
+  record a DRAT or LRAT proof of unsatisfiability, checkable by external
+  tools such as `drat-trim`.

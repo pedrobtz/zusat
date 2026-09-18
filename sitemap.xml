@@ -10,10 +10,13 @@
 <url><loc>https://pedrobtz.github.io/zusat/reference/read_dimacs.html</loc></url>
 <url><loc>https://pedrobtz.github.io/zusat/reference/sat_add.html</loc></url>
 <url><loc>https://pedrobtz.github.io/zusat/reference/sat_assignment.html</loc></url>
+<url><loc>https://pedrobtz.github.io/zusat/reference/sat_close_proof.html</loc></url>
+<url><loc>https://pedrobtz.github.io/zusat/reference/sat_conclude.html</loc></url>
 <url><loc>https://pedrobtz.github.io/zusat/reference/sat_constrain.html</loc></url>
 <url><loc>https://pedrobtz.github.io/zusat/reference/sat_constraint_failed.html</loc></url>
 <url><loc>https://pedrobtz.github.io/zusat/reference/sat_failed.html</loc></url>
 <url><loc>https://pedrobtz.github.io/zusat/reference/sat_fixed.html</loc></url>
+<url><loc>https://pedrobtz.github.io/zusat/reference/sat_is_tracing.html</loc></url>
 <url><loc>https://pedrobtz.github.io/zusat/reference/sat_limit.html</loc></url>
 <url><loc>https://pedrobtz.github.io/zusat/reference/sat_n_solutions.html</loc></url>
 <url><loc>https://pedrobtz.github.io/zusat/reference/sat_n_vars.html</loc></url>
@@ -24,6 +27,7 @@
 <url><loc>https://pedrobtz.github.io/zusat/reference/sat_solve.html</loc></url>
 <url><loc>https://pedrobtz.github.io/zusat/reference/sat_solver.html</loc></url>
 <url><loc>https://pedrobtz.github.io/zusat/reference/sat_status.html</loc></url>
+<url><loc>https://pedrobtz.github.io/zusat/reference/sat_trace_proof.html</loc></url>
 <url><loc>https://pedrobtz.github.io/zusat/reference/sat_value.html</loc></url>
 <url><loc>https://pedrobtz.github.io/zusat/reference/write_dimacs.html</loc></url>
 <url><loc>https://pedrobtz.github.io/zusat/reference/zusat-package.html</loc></url>

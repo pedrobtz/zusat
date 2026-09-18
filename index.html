@@ -199,6 +199,24 @@
 </div>
 </div>
 <div class="section level2">
+<h2 id="proofs-of-unsatisfiability">Proofs of unsatisfiability<a class="anchor" aria-label="anchor" href="#proofs-of-unsatisfiability"></a>
+</h2>
+<p>When a solver says <code>"unsat"</code>, you are taking its word for it. A proof makes the claim checkable by an independent tool — nothing about zusat, CaDiCaL or this binding has to be trusted for the check to mean something.</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".drat"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/sat_solver.html">sat_solver</a></span><span class="op">(</span><span class="op">)</span>            <span class="co"># must be empty: tracing records the whole</span></span>
+<span><span class="fu"><a href="reference/sat_trace_proof.html">sat_trace_proof</a></span><span class="op">(</span><span class="va">s</span>, <span class="va">path</span><span class="op">)</span>     <span class="co"># derivation, so it starts before the clauses</span></span>
+<span><span class="fu"><a href="reference/sat_add.html">sat_add</a></span><span class="op">(</span><span class="va">s</span>, <span class="va">clauses</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/sat_solve.html">sat_solve</a></span><span class="op">(</span><span class="va">s</span><span class="op">)</span>                 <span class="co">#&gt; "unsat"</span></span>
+<span><span class="fu"><a href="reference/sat_close_proof.html">sat_close_proof</a></span><span class="op">(</span><span class="va">s</span><span class="op">)</span>           <span class="co"># the proof is incomplete until this returns</span></span></code></pre></div>
+<p>Then check it with whatever you like:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="ex">drat-trim</span> problem.cnf problem.drat</span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a><span class="co">#&gt; s VERIFIED</span></span></code></pre></div>
+<p>A satisfiable formula needs no proof — the model is the evidence, and <code><a href="reference/sat_assignment.html">sat_assignment()</a></code> hands it to you.</p>
+<p><code>format = "lrat"</code> records the antecedents of every step, so a checker verifies it by lookup instead of re-deriving anything: bigger files, much faster and simpler checking.</p>
+</div>
+<div class="section level2">
 <h2 id="interrupting">Interrupting<a class="anchor" aria-label="anchor" href="#interrupting"></a>
 </h2>
 <p>Long solves respond to Ctrl-C. The solver stops at its next safe point and raises a catchable error; the handle stays usable afterwards.</p>
