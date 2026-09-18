@@ -61,68 +61,96 @@
 <span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"pedrobtz/zusat"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a>
+<h2 id="solving-a-formula">Solving a formula<a class="anchor" aria-label="anchor" href="#solving-a-formula"></a>
 </h2>
 <p>Clauses use DIMACS conventions: <code>i</code> means “variable <em>i</em> is true”, <code>-i</code> means its negation. No terminating zero is needed.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://pedrobtz.github.io/zusat/">zusat</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># (x1 OR x2) AND (NOT x1 OR x2) AND (x1 OR NOT x2)</span></span>
-<span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/sat_solver.html">sat_solver</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/sat_add.html">sat_add</a></span><span class="op">(</span><span class="va">s</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/sat_add.html">sat_add</a></span><span class="op">(</span><span class="va">s</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/sat_add.html">sat_add</a></span><span class="op">(</span><span class="va">s</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="reference/sat_solve.html">sat_solve</a></span><span class="op">(</span><span class="va">s</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "sat"</span></span>
-<span></span>
-<span><span class="fu"><a href="reference/sat_model.html">sat_model</a></span><span class="op">(</span><span class="va">s</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] TRUE TRUE</span></span></code></pre></div>
-<p><code>NA</code> in a model marks a variable the solver left unassigned because either polarity extends the model.</p>
-<div class="section level3">
-<h3 id="incremental-solving">Incremental solving<a class="anchor" aria-label="anchor" href="#incremental-solving"></a>
-</h3>
-<p>The solver keeps its state, so you can add clauses and re-solve without rebuilding the formula:</p>
+<span><span class="co"># (x1 OR x2) AND (NOT x1 OR x2)</span></span>
+<span><span class="fu"><a href="reference/sat_solve.html">sat_solve</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; &lt;zusat_solution&gt; sat  (2 variables, 2 active clauses, 0.000s)</span></span>
+<span><span class="co">#&gt;  variable value</span></span>
+<span><span class="co">#&gt;         1  TRUE</span></span>
+<span><span class="co">#&gt;         2  TRUE</span></span></code></pre></div>
+<p>A solution is a data frame of <code>variable</code> and <code>value</code>, so it drops straight into the rest of R:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/sat_solver.html">sat_solver</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/sat_add.html">sat_add</a></span><span class="op">(</span><span class="va">s</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/sat_solve.html">sat_solve</a></span><span class="op">(</span><span class="va">s</span><span class="op">)</span>      <span class="co">#&gt; "sat"</span></span>
+<code class="sourceCode R"><span><span class="va">sol</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/sat_solve.html">sat_solve</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="reference/sat_add.html">sat_add</a></span><span class="op">(</span><span class="va">s</span>, <span class="op">-</span><span class="fl">1</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/sat_add.html">sat_add</a></span><span class="op">(</span><span class="va">s</span>, <span class="op">-</span><span class="fl">2</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/sat_solve.html">sat_solve</a></span><span class="op">(</span><span class="va">s</span><span class="op">)</span>      <span class="co">#&gt; "unsat"</span></span></code></pre></div>
+<span><span class="fu"><a href="reference/sat_status.html">sat_status</a></span><span class="op">(</span><span class="va">sol</span><span class="op">)</span>       <span class="co">#&gt; "sat"</span></span>
+<span><span class="fu"><a href="reference/sat_status.html">sat_is_sat</a></span><span class="op">(</span><span class="va">sol</span><span class="op">)</span>       <span class="co">#&gt; TRUE</span></span>
+<span><span class="fu"><a href="reference/sat_assignment.html">sat_assignment</a></span><span class="op">(</span><span class="va">sol</span><span class="op">)</span>   <span class="co">#&gt; named logical vector</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">sol</span>, <span class="va">value</span><span class="op">)</span>    <span class="co">#&gt; just the true variables</span></span></code></pre></div>
+<p>The shape is the same whether or not the formula was satisfiable — an unsatisfiable result is a data frame with no rows, not a different type — so you can index it without branching first. <code>NA</code> marks a variable the solver left unassigned because either polarity extends the model.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/sat_solve.html">sat_solve</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; &lt;zusat_solution&gt; unsat  (1 variable, 0 active clauses, 0.000s)</span></span></code></pre></div>
 </div>
+<div class="section level2">
+<h2 id="enumerating-solutions">Enumerating solutions<a class="anchor" aria-label="anchor" href="#enumerating-solutions"></a>
+</h2>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/sat_solutions.html">sat_solutions</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; &lt;zusat_solutions&gt; sat  (3 solutions)</span></span>
+<span><span class="co">#&gt;  solution variable value</span></span>
+<span><span class="co">#&gt;         1        1  TRUE</span></span>
+<span><span class="co">#&gt;         1        2  TRUE</span></span>
+<span><span class="co">#&gt;         2        1 FALSE</span></span>
+<span><span class="co">#&gt;         2        2  TRUE</span></span>
+<span><span class="co">#&gt;         3        1  TRUE</span></span>
+<span><span class="co">#&gt;         3        2 FALSE</span></span></code></pre></div>
+<p>Encodings introduce auxiliary variables, and models that differ only in those are usually the same answer repeated. <code>vars</code> projects onto the variables you care about, so each distinct assignment of them is returned once:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/sat_n_solutions.html">sat_n_solutions</a></span><span class="op">(</span><span class="fu"><a href="reference/sat_solutions.html">sat_solutions</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span>, vars <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">)</span><span class="op">)</span>  <span class="co">#&gt; 6</span></span>
+<span><span class="fu"><a href="reference/sat_n_solutions.html">sat_n_solutions</a></span><span class="op">(</span><span class="fu"><a href="reference/sat_solutions.html">sat_solutions</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span>, vars <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span>  <span class="co">#&gt; 3</span></span></code></pre></div>
+<p>Enumeration stops at <code>limit</code> (1000 by default, because the count is usually exponential). Check whether it finished:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">sols</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/sat_solutions.html">sat_solutions</a></span><span class="op">(</span><span class="va">cnf</span>, limit <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/sat_n_solutions.html">sat_complete</a></span><span class="op">(</span><span class="va">sols</span><span class="op">)</span>   <span class="co">#&gt; FALSE means there may be more</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="incremental-solving">Incremental solving<a class="anchor" aria-label="anchor" href="#incremental-solving"></a>
+</h2>
+<p>A solver keeps its state, so adding a clause and re-solving reuses everything already learned. This is where CaDiCaL earns its keep over a one-shot call.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/sat_solver.html">sat_solver</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="reference/sat_solve.html">sat_solve</a></span><span class="op">(</span><span class="va">s</span><span class="op">)</span>         <span class="co">#&gt; sat</span></span>
+<span><span class="fu"><a href="reference/sat_add.html">sat_add</a></span><span class="op">(</span><span class="va">s</span>, <span class="op">-</span><span class="fl">1</span><span class="op">)</span>       <span class="co"># one clause</span></span>
+<span><span class="fu"><a href="reference/sat_add.html">sat_add</a></span><span class="op">(</span><span class="va">s</span>, <span class="op">-</span><span class="fl">2</span><span class="op">)</span>       <span class="co"># ...</span></span>
+<span><span class="fu"><a href="reference/sat_solve.html">sat_solve</a></span><span class="op">(</span><span class="va">s</span><span class="op">)</span>         <span class="co">#&gt; unsat</span></span></code></pre></div>
+<p><code><a href="reference/sat_solve.html">sat_solve()</a></code> works on a formula or a solver, so the calling code reads the same either way.</p>
 <div class="section level3">
 <h3 id="assumptions">Assumptions<a class="anchor" aria-label="anchor" href="#assumptions"></a>
 </h3>
-<p>Assumptions hold for a single <code><a href="reference/sat_solve.html">sat_solve()</a></code> call. When the result is <code>"unsat"</code>, <code><a href="reference/sat_failed.html">sat_failed()</a></code> reports which assumptions the solver actually used — a small unsatisfiable core over the assumptions:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/sat_solver.html">sat_solver</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/sat_add.html">sat_add</a></span><span class="op">(</span><span class="va">s</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<p>Assumptions hold for a single call. When the result is unsatisfiable, <code><a href="reference/sat_failed.html">sat_failed()</a></code> reports which of them the solver actually used — an unsatisfiable core over the assumptions:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/sat_solver.html">sat_solver</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="reference/sat_solve.html">sat_solve</a></span><span class="op">(</span><span class="va">s</span>, assumptions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span>   <span class="co">#&gt; "unsat"</span></span>
+<span><span class="fu"><a href="reference/sat_solve.html">sat_solve</a></span><span class="op">(</span><span class="va">s</span>, assumptions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span>   <span class="co">#&gt; unsat</span></span>
 <span><span class="fu"><a href="reference/sat_failed.html">sat_failed</a></span><span class="op">(</span><span class="va">s</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span>                <span class="co">#&gt; TRUE TRUE</span></span>
 <span></span>
-<span><span class="fu"><a href="reference/sat_solve.html">sat_solve</a></span><span class="op">(</span><span class="va">s</span><span class="op">)</span>                            <span class="co">#&gt; "sat" (assumptions did not persist)</span></span></code></pre></div>
+<span><span class="fu"><a href="reference/sat_solve.html">sat_solve</a></span><span class="op">(</span><span class="va">s</span><span class="op">)</span>                            <span class="co">#&gt; sat — assumptions did not persist</span></span></code></pre></div>
+<p>CaDiCaL does not expose cores over the original <em>clauses</em>, only over assumptions. If you need to know which clauses conflict, encode each one with a selector variable and assume the selectors.</p>
 </div>
 <div class="section level3">
 <h3 id="tuning">Tuning<a class="anchor" aria-label="anchor" href="#tuning"></a>
 </h3>
-<p>CaDiCaL exposes several hundred integer options:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<p>CaDiCaL has several hundred integer options:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/sat_option.html">sat_option</a></span><span class="op">(</span><span class="va">s</span>, <span class="st">"elim"</span><span class="op">)</span>        <span class="co"># read</span></span>
-<span><span class="fu"><a href="reference/sat_option.html">sat_option</a></span><span class="op">(</span><span class="va">s</span>, <span class="st">"elim"</span>, <span class="fl">0L</span><span class="op">)</span>    <span class="co"># disable bounded variable elimination</span></span></code></pre></div>
+<span><span class="fu"><a href="reference/sat_option.html">sat_option</a></span><span class="op">(</span><span class="va">s</span>, <span class="st">"elim"</span>, <span class="fl">0</span><span class="op">)</span>     <span class="co"># disable bounded variable elimination</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
 <h2 id="interrupting">Interrupting<a class="anchor" aria-label="anchor" href="#interrupting"></a>
 </h2>
-<p>Long solves respond to Ctrl-C. The solver stops at its next safe point and raises a catchable R error; the solver handle stays usable afterwards.</p>
+<p>Long solves respond to Ctrl-C. The solver stops at its next safe point and raises a catchable error; the handle stays usable afterwards.</p>
 </div>
 <div class="section level2">
 <h2 id="updating-the-bundled-solver">Updating the bundled solver<a class="anchor" aria-label="anchor" href="#updating-the-bundled-solver"></a>
 </h2>
-<p><code>tools/vendor-cadical.sh [git-ref]</code> re-vendors CaDiCaL from upstream and records the exact commit in <code>src/cadical/VENDORED</code>. The sources are used unmodified; the build is configured entirely through <code>-D</code> flags in <code>src/Makevars</code>, which documents why each one is needed.</p>
+<p><code>tools/vendor-cadical.sh [git-ref]</code> re-vendors CaDiCaL from upstream, applies the R compatibility rewrites, and records the exact commit, a manifest and per-file checksums. <code>tools/vendor/verify</code> checks the tree against them.</p>
 </div>
 <div class="section level2">
 <h2 id="licence">Licence<a class="anchor" aria-label="anchor" href="#licence"></a>

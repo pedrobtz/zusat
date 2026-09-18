@@ -1,8 +1,7 @@
 # Get or set a CaDiCaL option
 
 CaDiCaL exposes several hundred integer-valued tuning options, for
-example `"elim"`, `"vivify"`, or `"restartint"`. Names are as documented
-by CaDiCaL itself.
+example `"elim"`, `"vivify"` or `"restartint"`. Names are CaDiCaL's own.
 
 ## Usage
 
@@ -22,12 +21,12 @@ sat_option(solver, name, value)
 
 - value:
 
-  An integer value to set. When missing, the current value is returned
+  An integer to set. When missing, the current value is returned
   instead.
 
 ## Value
 
-The option value, invisibly when setting.
+The option value; invisibly when setting.
 
 ## Examples
 
@@ -35,4 +34,5 @@ The option value, invisibly when setting.
 s <- sat_solver()
 sat_option(s, "elim")
 #> [1] 1
+sat_option(s, "elim", 0)
 ```

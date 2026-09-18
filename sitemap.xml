@@ -6,15 +6,22 @@
 <url><loc>https://pedrobtz.github.io/zusat/index.html</loc></url>
 <url><loc>https://pedrobtz.github.io/zusat/news/index.html</loc></url>
 <url><loc>https://pedrobtz.github.io/zusat/reference/index.html</loc></url>
+<url><loc>https://pedrobtz.github.io/zusat/reference/read_dimacs.html</loc></url>
 <url><loc>https://pedrobtz.github.io/zusat/reference/sat_add.html</loc></url>
-<url><loc>https://pedrobtz.github.io/zusat/reference/sat_add_all.html</loc></url>
+<url><loc>https://pedrobtz.github.io/zusat/reference/sat_assignment.html</loc></url>
 <url><loc>https://pedrobtz.github.io/zusat/reference/sat_failed.html</loc></url>
-<url><loc>https://pedrobtz.github.io/zusat/reference/sat_model.html</loc></url>
+<url><loc>https://pedrobtz.github.io/zusat/reference/sat_n_solutions.html</loc></url>
 <url><loc>https://pedrobtz.github.io/zusat/reference/sat_n_vars.html</loc></url>
 <url><loc>https://pedrobtz.github.io/zusat/reference/sat_option.html</loc></url>
 <url><loc>https://pedrobtz.github.io/zusat/reference/sat_signature.html</loc></url>
+<url><loc>https://pedrobtz.github.io/zusat/reference/sat_solutions.html</loc></url>
 <url><loc>https://pedrobtz.github.io/zusat/reference/sat_solve.html</loc></url>
 <url><loc>https://pedrobtz.github.io/zusat/reference/sat_solver.html</loc></url>
+<url><loc>https://pedrobtz.github.io/zusat/reference/sat_status.html</loc></url>
+<url><loc>https://pedrobtz.github.io/zusat/reference/sat_value.html</loc></url>
+<url><loc>https://pedrobtz.github.io/zusat/reference/write_dimacs.html</loc></url>
 <url><loc>https://pedrobtz.github.io/zusat/reference/zusat-package.html</loc></url>
+<url><loc>https://pedrobtz.github.io/zusat/reference/zusat_solution.html</loc></url>
+<url><loc>https://pedrobtz.github.io/zusat/reference/zusat_solutions.html</loc></url>
 </urlset>
 

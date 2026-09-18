@@ -1,13 +1,13 @@
-# Add a clause to a solver
+# Add clauses to a solver
 
-Clauses use DIMACS conventions: a positive integer `i` is the literal
-"variable i is true", a negative integer `-i` is its negation. Do not
-include a terminating zero; that is added internally.
+Clauses use DIMACS conventions: a positive number `i` is the literal
+"variable i is true", a negative number `-i` is its negation. No
+terminating zero is needed; it is added internally.
 
 ## Usage
 
 ``` r
-sat_add(solver, literals)
+sat_add(solver, x)
 ```
 
 ## Arguments
@@ -17,9 +17,10 @@ sat_add(solver, literals)
   A `zusat_solver` from
   [`sat_solver()`](https://pedrobtz.github.io/zusat/reference/sat_solver.md).
 
-- literals:
+- x:
 
-  Integer vector of non-zero literals. An empty vector adds the empty
+  Either one clause, as a numeric vector of non-zero literals, or
+  several, as a list of such vectors. An empty vector is the empty
   clause, which makes the formula unsatisfiable.
 
 ## Value
@@ -30,5 +31,6 @@ sat_add(solver, literals)
 
 ``` r
 s <- sat_solver()
-sat_add(s, c(1L, -2L))
+sat_add(s, c(1, -2))                    # one clause
+sat_add(s, list(c(2, 3), c(-1, 3)))     # several
 ```

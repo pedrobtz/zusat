@@ -43,38 +43,45 @@
 
       <dl><dt>
 
-          <code><a href="sat_add.html">sat_add()</a></code>
+          <code><a href="read_dimacs.html">read_dimacs()</a></code>
 
         </dt>
-        <dd>Add a clause to a solver</dd>
+        <dd>Read a formula from a DIMACS CNF file</dd>
 
         <dt>
 
-          <code><a href="sat_add_all.html">sat_add_all()</a></code>
+          <code><a href="sat_add.html">sat_add()</a></code>
 
         </dt>
-        <dd>Add several clauses at once</dd>
+        <dd>Add clauses to a solver</dd>
+
+        <dt>
+
+          <code><a href="sat_assignment.html">sat_assignment()</a></code>
+
+        </dt>
+        <dd>A solution as a named logical vector</dd>
 
         <dt>
 
           <code><a href="sat_failed.html">sat_failed()</a></code>
 
         </dt>
-        <dd>Identify which assumptions caused unsatisfiability</dd>
+        <dd>Which assumptions caused unsatisfiability</dd>
 
         <dt>
 
-          <code><a href="sat_model.html">sat_model()</a></code>
+          <code><a href="sat_n_solutions.html">sat_n_solutions()</a></code> <code><a href="sat_n_solutions.html">sat_complete()</a></code>
 
         </dt>
-        <dd>Read variable assignments from a satisfying model</dd>
+        <dd>Number of solutions found, and whether that is all of them</dd>
 
         <dt>
 
-          <code><a href="sat_n_vars.html">sat_n_vars()</a></code>
+          <code><a href="sat_n_vars.html">sat_n_vars()</a></code> <code><a href="sat_n_vars.html">sat_n_clauses()</a></code>
 
         </dt>
-        <dd>Number of variables known to the solver</dd>
+        <dd>Size of the formula a solver holds</dd>
 
         <dt>
 
@@ -88,14 +95,21 @@
           <code><a href="sat_signature.html">sat_signature()</a></code>
 
         </dt>
-        <dd>Version string of the vendored CaDiCaL</dd>
+        <dd>Version of the bundled CaDiCaL</dd>
+
+        <dt>
+
+          <code><a href="sat_solutions.html">sat_solutions()</a></code>
+
+        </dt>
+        <dd>Enumerate satisfying assignments</dd>
 
         <dt>
 
           <code><a href="sat_solve.html">sat_solve()</a></code>
 
         </dt>
-        <dd>Solve the current formula</dd>
+        <dd>Solve a formula</dd>
 
         <dt>
 
@@ -103,6 +117,41 @@
 
         </dt>
         <dd>Create a CaDiCaL solver</dd>
+
+        <dt>
+
+          <code><a href="sat_status.html">sat_status()</a></code> <code><a href="sat_status.html">sat_is_sat()</a></code>
+
+        </dt>
+        <dd>The outcome of a solve</dd>
+
+        <dt>
+
+          <code><a href="sat_value.html">sat_value()</a></code>
+
+        </dt>
+        <dd>Read variable assignments directly from a solver</dd>
+
+        <dt>
+
+          <code><a href="write_dimacs.html">write_dimacs()</a></code>
+
+        </dt>
+        <dd>Write a formula to a DIMACS CNF file</dd>
+
+        <dt>
+
+          <code><a href="zusat_solution.html">zusat_solution</a></code>
+
+        </dt>
+        <dd>The result of a solve</dd>
+
+        <dt>
+
+          <code><a href="zusat_solutions.html">zusat_solutions</a></code>
+
+        </dt>
+        <dd>The result of an enumeration</dd>
       </dl></div>
   </main></div>
 

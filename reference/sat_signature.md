@@ -1,6 +1,6 @@
-# Version string of the vendored CaDiCaL
+# Version of the bundled CaDiCaL
 
-Version string of the vendored CaDiCaL
+Version of the bundled CaDiCaL
 
 ## Usage
 

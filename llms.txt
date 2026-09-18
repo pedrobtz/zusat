@@ -15,7 +15,7 @@ the package itself and a C++ compiler.
 pak::pak("pedrobtz/zusat")
 ```
 
-## Usage
+## Solving a formula
 
 Clauses use DIMACS conventions: `i` means “variable *i* is true”, `-i`
 means its negation. No terminating zero is needed.
@@ -24,80 +24,135 @@ means its negation. No terminating zero is needed.
 
 library(zusat)
 
-# (x1 OR x2) AND (NOT x1 OR x2) AND (x1 OR NOT x2)
-s <- sat_solver()
-sat_add(s, c(1, 2))
-sat_add(s, c(-1, 2))
-sat_add(s, c(1, -2))
-
-sat_solve(s)
-#> [1] "sat"
-
-sat_model(s)
-#> [1] TRUE TRUE
+# (x1 OR x2) AND (NOT x1 OR x2)
+sat_solve(list(c(1, 2), c(-1, 2)))
+#> <zusat_solution> sat  (2 variables, 2 active clauses, 0.000s)
+#>  variable value
+#>         1  TRUE
+#>         2  TRUE
 ```
 
-`NA` in a model marks a variable the solver left unassigned because
-either polarity extends the model.
-
-### Incremental solving
-
-The solver keeps its state, so you can add clauses and re-solve without
-rebuilding the formula:
+A solution is a data frame of `variable` and `value`, so it drops
+straight into the rest of R:
 
 ``` r
 
-s <- sat_solver()
-sat_add(s, c(1, 2))
-sat_solve(s)      #> "sat"
+sol <- sat_solve(list(c(1, 2), c(-1, 3)))
 
-sat_add(s, -1)
-sat_add(s, -2)
-sat_solve(s)      #> "unsat"
+sat_status(sol)       #> "sat"
+sat_is_sat(sol)       #> TRUE
+sat_assignment(sol)   #> named logical vector
+subset(sol, value)    #> just the true variables
 ```
+
+The shape is the same whether or not the formula was satisfiable — an
+unsatisfiable result is a data frame with no rows, not a different type
+— so you can index it without branching first. `NA` marks a variable the
+solver left unassigned because either polarity extends the model.
+
+``` r
+
+sat_solve(list(1, -1))
+#> <zusat_solution> unsat  (1 variable, 0 active clauses, 0.000s)
+```
+
+## Enumerating solutions
+
+``` r
+
+sat_solutions(list(c(1, 2)))
+#> <zusat_solutions> sat  (3 solutions)
+#>  solution variable value
+#>         1        1  TRUE
+#>         1        2  TRUE
+#>         2        1 FALSE
+#>         2        2  TRUE
+#>         3        1  TRUE
+#>         3        2 FALSE
+```
+
+Encodings introduce auxiliary variables, and models that differ only in
+those are usually the same answer repeated. `vars` projects onto the
+variables you care about, so each distinct assignment of them is
+returned once:
+
+``` r
+
+sat_n_solutions(sat_solutions(list(c(1, 2)), vars = 1:3))  #> 6
+sat_n_solutions(sat_solutions(list(c(1, 2)), vars = 1:2))  #> 3
+```
+
+Enumeration stops at `limit` (1000 by default, because the count is
+usually exponential). Check whether it finished:
+
+``` r
+
+sols <- sat_solutions(cnf, limit = 100)
+sat_complete(sols)   #> FALSE means there may be more
+```
+
+## Incremental solving
+
+A solver keeps its state, so adding a clause and re-solving reuses
+everything already learned. This is where CaDiCaL earns its keep over a
+one-shot call.
+
+``` r
+
+s <- sat_solver(list(c(1, 2)))
+
+sat_solve(s)         #> sat
+sat_add(s, -1)       # one clause
+sat_add(s, -2)       # ...
+sat_solve(s)         #> unsat
+```
+
+[`sat_solve()`](https://pedrobtz.github.io/zusat/reference/sat_solve.md)
+works on a formula or a solver, so the calling code reads the same
+either way.
 
 ### Assumptions
 
-Assumptions hold for a single
-[`sat_solve()`](https://pedrobtz.github.io/zusat/reference/sat_solve.md)
-call. When the result is `"unsat"`,
+Assumptions hold for a single call. When the result is unsatisfiable,
 [`sat_failed()`](https://pedrobtz.github.io/zusat/reference/sat_failed.md)
-reports which assumptions the solver actually used — a small
-unsatisfiable core over the assumptions:
+reports which of them the solver actually used — an unsatisfiable core
+over the assumptions:
 
 ``` r
 
-s <- sat_solver()
-sat_add(s, c(1, 2))
+s <- sat_solver(list(c(1, 2)))
 
-sat_solve(s, assumptions = c(-1, -2))   #> "unsat"
+sat_solve(s, assumptions = c(-1, -2))   #> unsat
 sat_failed(s, c(-1, -2))                #> TRUE TRUE
 
-sat_solve(s)                            #> "sat" (assumptions did not persist)
+sat_solve(s)                            #> sat — assumptions did not persist
 ```
+
+CaDiCaL does not expose cores over the original *clauses*, only over
+assumptions. If you need to know which clauses conflict, encode each one
+with a selector variable and assume the selectors.
 
 ### Tuning
 
-CaDiCaL exposes several hundred integer options:
+CaDiCaL has several hundred integer options:
 
 ``` r
 
 sat_option(s, "elim")        # read
-sat_option(s, "elim", 0L)    # disable bounded variable elimination
+sat_option(s, "elim", 0)     # disable bounded variable elimination
 ```
 
 ## Interrupting
 
 Long solves respond to Ctrl-C. The solver stops at its next safe point
-and raises a catchable R error; the solver handle stays usable
-afterwards.
+and raises a catchable error; the handle stays usable afterwards.
 
 ## Updating the bundled solver
 
-`tools/vendor-cadical.sh [git-ref]` re-vendors CaDiCaL from upstream and
-records the exact commit in `src/cadical/VENDORED`. The sources are used
-unmodified; the build is configured entirely through `-D` flags in
-`src/Makevars`, which documents why each one is needed.
+`tools/vendor-cadical.sh [git-ref]` re-vendors CaDiCaL from upstream,
+applies the R compatibility rewrites, and records the exact commit, a
+manifest and per-file checksums. `tools/vendor/verify` checks the tree
+against them.
 
 ## Licence
 
@@ -108,22 +163,39 @@ zusat is MIT licensed. The bundled CaDiCaL is also MIT licensed — see
 
 ## All functions
 
+- [`read_dimacs()`](https://pedrobtz.github.io/zusat/reference/read_dimacs.md)
+  : Read a formula from a DIMACS CNF file
 - [`sat_add()`](https://pedrobtz.github.io/zusat/reference/sat_add.md) :
-  Add a clause to a solver
-- [`sat_add_all()`](https://pedrobtz.github.io/zusat/reference/sat_add_all.md)
-  : Add several clauses at once
+  Add clauses to a solver
+- [`sat_assignment()`](https://pedrobtz.github.io/zusat/reference/sat_assignment.md)
+  : A solution as a named logical vector
 - [`sat_failed()`](https://pedrobtz.github.io/zusat/reference/sat_failed.md)
-  : Identify which assumptions caused unsatisfiability
-- [`sat_model()`](https://pedrobtz.github.io/zusat/reference/sat_model.md)
-  : Read variable assignments from a satisfying model
+  : Which assumptions caused unsatisfiability
+- [`sat_n_solutions()`](https://pedrobtz.github.io/zusat/reference/sat_n_solutions.md)
+  [`sat_complete()`](https://pedrobtz.github.io/zusat/reference/sat_n_solutions.md)
+  : Number of solutions found, and whether that is all of them
 - [`sat_n_vars()`](https://pedrobtz.github.io/zusat/reference/sat_n_vars.md)
-  : Number of variables known to the solver
+  [`sat_n_clauses()`](https://pedrobtz.github.io/zusat/reference/sat_n_vars.md)
+  : Size of the formula a solver holds
 - [`sat_option()`](https://pedrobtz.github.io/zusat/reference/sat_option.md)
   : Get or set a CaDiCaL option
 - [`sat_signature()`](https://pedrobtz.github.io/zusat/reference/sat_signature.md)
-  : Version string of the vendored CaDiCaL
+  : Version of the bundled CaDiCaL
+- [`sat_solutions()`](https://pedrobtz.github.io/zusat/reference/sat_solutions.md)
+  : Enumerate satisfying assignments
 - [`sat_solve()`](https://pedrobtz.github.io/zusat/reference/sat_solve.md)
-  : Solve the current formula
+  : Solve a formula
 - [`sat_solver()`](https://pedrobtz.github.io/zusat/reference/sat_solver.md)
   : Create a CaDiCaL solver
+- [`sat_status()`](https://pedrobtz.github.io/zusat/reference/sat_status.md)
+  [`sat_is_sat()`](https://pedrobtz.github.io/zusat/reference/sat_status.md)
+  : The outcome of a solve
+- [`sat_value()`](https://pedrobtz.github.io/zusat/reference/sat_value.md)
+  : Read variable assignments directly from a solver
+- [`write_dimacs()`](https://pedrobtz.github.io/zusat/reference/write_dimacs.md)
+  : Write a formula to a DIMACS CNF file
+- [`zusat_solution`](https://pedrobtz.github.io/zusat/reference/zusat_solution.md)
+  : The result of a solve
+- [`zusat_solutions`](https://pedrobtz.github.io/zusat/reference/zusat_solutions.md)
+  : The result of an enumeration
 
