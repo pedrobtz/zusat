@@ -2,6 +2,10 @@
 
 ## All functions
 
+- [`sat_at_most()`](https://pedrobtz.github.io/zusat/reference/cardinality.md)
+  [`sat_at_least()`](https://pedrobtz.github.io/zusat/reference/cardinality.md)
+  [`sat_exactly()`](https://pedrobtz.github.io/zusat/reference/cardinality.md)
+  : Cardinality constraints
 - [`read_dimacs()`](https://pedrobtz.github.io/zusat/reference/read_dimacs.md)
   : Read a formula from a DIMACS CNF file
 - [`sat_add()`](https://pedrobtz.github.io/zusat/reference/sat_add.md) :

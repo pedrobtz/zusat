@@ -132,6 +132,41 @@ CaDiCaL does not expose cores over the original *clauses*, only over
 assumptions. If you need to know which clauses conflict, encode each one
 with a selector variable and assume the selectors.
 
+## Cardinality constraints
+
+“At most three of these”, “exactly one of these” — the constraints most
+real models are built from. CNF cannot express them directly, so they
+have to be encoded as clauses:
+
+``` r
+
+s <- sat_solver()
+
+sat_exactly(s, 1:4, 1)     # exactly one of x1..x4
+sat_at_most(s, 5:12, 2)    # at most two of x5..x12
+sat_at_least(s, 13:20, 3)  # at least three of x13..x20
+
+sat_solve(s)
+```
+
+Negative literals work too, so “at most one of these is *false*” is
+`sat_at_most(s, -(1:4), 1)`.
+
+The encoding is chosen automatically, and the choice is not marginal —
+at 40 literals with `k = 3`, forbidding every 4-subset is 91,390 clauses
+while a sequential counter is a few hundred. Override it when you are
+measuring:
+
+``` r
+
+sat_at_most(s, 1:40, 3, encoding = "sequential")
+```
+
+These take a solver rather than returning clauses, because every
+encoding but the pairwise one introduces auxiliary variables that must
+not collide with the rest of the formula. The solver is the only thing
+that knows which variables are already in use.
+
 ### Bounding a solve
 
 SAT is NP-complete, so an innocuous-looking formula can run far longer
@@ -220,6 +255,10 @@ zusat is MIT licensed. The bundled CaDiCaL is also MIT licensed — see
 
 ## All functions
 
+- [`sat_at_most()`](https://pedrobtz.github.io/zusat/reference/cardinality.md)
+  [`sat_at_least()`](https://pedrobtz.github.io/zusat/reference/cardinality.md)
+  [`sat_exactly()`](https://pedrobtz.github.io/zusat/reference/cardinality.md)
+  : Cardinality constraints
 - [`read_dimacs()`](https://pedrobtz.github.io/zusat/reference/read_dimacs.md)
   : Read a formula from a DIMACS CNF file
 - [`sat_add()`](https://pedrobtz.github.io/zusat/reference/sat_add.md) :

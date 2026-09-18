@@ -22,3 +22,9 @@
   reports literals proved at the root;
   [`sat_simplify()`](https://pedrobtz.github.io/zusat/reference/sat_simplify.md)
   runs inprocessing alone.
+- [`sat_at_most()`](https://pedrobtz.github.io/zusat/reference/cardinality.md),
+  [`sat_at_least()`](https://pedrobtz.github.io/zusat/reference/cardinality.md)
+  and
+  [`sat_exactly()`](https://pedrobtz.github.io/zusat/reference/cardinality.md)
+  encode cardinality constraints, choosing between a pairwise and a
+  sequential-counter encoding automatically.
