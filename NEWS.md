@@ -11,3 +11,6 @@
   `"unknown"` rather than running indefinitely.
 * `sat_constrain()` adds a clause for one solve only; `sat_fixed()` reports
   literals proved at the root; `sat_simplify()` runs inprocessing alone.
+* `sat_at_most()`, `sat_at_least()` and `sat_exactly()` encode cardinality
+  constraints, choosing between a pairwise and a sequential-counter encoding
+  automatically.
