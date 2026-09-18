@@ -4,10 +4,66 @@
 \name{zusat-package}
 \alias{zusat}
 \alias{zusat-package}
-\title{zusat: R Bindings for the 'CaDiCaL' SAT Solver}
+\title{zusat: Boolean satisfiability with CaDiCaL}
 \description{
-Solves Boolean satisfiability (SAT) problems using 'CaDiCaL', a modern conflict-driven clause learning solver. Supports incremental solving, solving under assumptions, and inspection of which assumptions caused unsatisfiability. The 'CaDiCaL' C++ sources are bundled, so no external solver installation is required.
+Solves Boolean satisfiability (SAT) problems using a bundled copy of
+CaDiCaL. Nothing needs installing beyond this package and a C++ compiler.
 }
+\section{Getting started}{
+
+
+A formula is a list of clauses; a clause is a numeric vector of literals in
+DIMACS convention, where \code{i} means "variable \emph{i} is true" and \code{-i} its
+negation. No terminating zero is needed.
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{sat_solve(list(c(1, 2), c(-1, 2)))
+}\if{html}{\out{</div>}}
+
+The result is a data frame of \code{variable} and \code{value}, with the outcome in
+an attribute that \code{\link[=sat_status]{sat_status()}} reads. It keeps that shape whether or not
+the formula was satisfiable, so you can index it without branching first.
+}
+
+\section{The harder part}{
+
+
+The API is small. Turning a question into clauses is where the work is, and
+where mistakes produce a confident wrong answer rather than an error. The
+article \emph{Modelling a problem as SAT} works an example through end to end.
+}
+
+\section{Map of the package}{
+
+
+\describe{
+\item{Solving}{\code{\link[=sat_solve]{sat_solve()}} for a formula or a solver, \code{\link[=sat_solver]{sat_solver()}}
+and \code{\link[=sat_add]{sat_add()}} to build one up incrementally, \code{\link[=sat_solutions]{sat_solutions()}} to
+enumerate more than one model.}
+\item{Cardinality}{\code{\link[=sat_at_most]{sat_at_most()}}, \code{\link[=sat_at_least]{sat_at_least()}} and \code{\link[=sat_exactly]{sat_exactly()}}
+encode "at most k of these", which CNF cannot state directly and most
+real models need.}
+\item{Steering}{Assumptions via \code{\link[=sat_solve]{sat_solve()}}, a one-shot clause via
+\code{\link[=sat_constrain]{sat_constrain()}}, resource limits via \code{\link[=sat_limit]{sat_limit()}}, and
+\code{\link[=sat_fixed]{sat_fixed()}} for what the solver has already proved.}
+\item{Proofs}{\code{\link[=sat_trace_proof]{sat_trace_proof()}} records a DRAT or LRAT derivation, so
+an unsatisfiability claim can be checked by a tool that trusts neither
+CaDiCaL nor this package.}
+\item{Files}{\code{\link[=read_dimacs]{read_dimacs()}} and \code{\link[=write_dimacs]{write_dimacs()}}, the format every
+solver and benchmark set speaks.}
+}
+}
+
+\section{Two things that bite}{
+
+
+\code{"unknown"} is not a weaker \code{"unsat"}. It means the solver stopped inside a
+limit set by \code{\link[=sat_limit]{sat_limit()}} without deciding, and the question is still
+open.
+
+Enumeration stops at \code{limit}, and a truncated result looks exactly like an
+exhaustive one. \code{\link[=sat_complete]{sat_complete()}} is how you tell them apart.
+}
+
 \seealso{
 Useful links:
 \itemize{

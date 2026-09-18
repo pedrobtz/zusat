@@ -2,3 +2,57 @@ url: https://pedrobtz.github.io/zusat/
 template:
   bootstrap: 5
 
+reference:
+- title: Solving
+  desc: Solve a formula directly, or build one up incrementally.
+  contents:
+  - sat_solver
+  - sat_add
+  - sat_solve
+  - sat_solutions
+
+- title: Reading results
+  desc: The outcome of a solve, and the model behind it.
+  contents:
+  - sat_status
+  - sat_assignment
+  - sat_value
+  - sat_n_solutions
+  - zusat_solution
+  - zusat_solutions
+
+- title: Cardinality constraints
+  desc: >
+    At most, at least, or exactly k of a set of literals -- the constraints
+    most real models are built from.
+  contents:
+  - cardinality
+
+- title: Steering the search
+  desc: >
+    Assumptions, temporary constraints, resource limits and what the solver
+    has already proved.
+  contents:
+  - sat_failed
+  - sat_limit
+  - sat_constrain
+  - sat_constraint_failed
+  - sat_fixed
+  - sat_simplify
+  - sat_option
+
+- title: Proofs
+  desc: Make an unsatisfiability claim checkable by an independent tool.
+  contents:
+  - sat_trace_proof
+  - sat_close_proof
+  - sat_is_tracing
+  - sat_conclude
+
+- title: Files and metadata
+  contents:
+  - read_dimacs
+  - write_dimacs
+  - sat_n_vars
+  - sat_signature
+  - zusat-package
