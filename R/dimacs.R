@@ -25,6 +25,7 @@
 #' read_dimacs(f)
 #' sat_solve(read_dimacs(f))
 read_dimacs <- function(path) {
+  check_path(path)
   if (!file.exists(path)) {
     stop(sprintf("no such file: %s", path), call. = FALSE)
   }
@@ -52,9 +53,12 @@ read_dimacs <- function(path) {
     return(list())
   }
 
-  values <- suppressWarnings(as.numeric(tokens))
-  if (anyNA(values)) {
-    bad <- tokens[is.na(values)][1]
+  # DIMACS literals are decimal integers. as.numeric() alone also accepts
+  # "0x10" and "1e3", which no DIMACS tool writes, so a corrupt file would
+  # read as a different formula rather than fail.
+  numeral <- grepl("^[-+]?[0-9]+$", tokens)
+  if (!all(numeral)) {
+    bad <- tokens[!numeral][1]
     stop(
       sprintf(
         "%s is not a DIMACS file: unexpected token '%s'",
@@ -64,12 +68,7 @@ read_dimacs <- function(path) {
       call. = FALSE
     )
   }
-  if (any(values != trunc(values))) {
-    stop(
-      sprintf("%s contains a non-integer literal", basename(path)),
-      call. = FALSE
-    )
-  }
+  values <- as.numeric(tokens)
   # Range-checked before as.integer(), which would otherwise turn an oversized
   # literal into NA with only a coercion warning -- the file would appear to
   # read, and the failure would surface later from sat_add() with no mention
@@ -112,7 +111,8 @@ read_dimacs <- function(path) {
 #' @param x A list of clauses, as accepted by [sat_add()].
 #' @param path Path to write to.
 #' @param comment Optional character vector written as `c` comment lines at
-#'   the top of the file.
+#'   the top of the file. An element containing line breaks becomes several
+#'   comment lines, so a comment can never be read back as formula.
 #' @return `path`, invisibly.
 #' @seealso [read_dimacs()]
 #' @export
@@ -121,10 +121,17 @@ read_dimacs <- function(path) {
 #' write_dimacs(list(c(1, 2), c(-1, 3)), f, comment = "an example")
 #' cat(readLines(f), sep = "\n")
 write_dimacs <- function(x, path, comment = NULL) {
-  if (!is.list(x)) {
-    stop("`x` must be a list of clauses", call. = FALSE)
+  check_formula(x, "a list of clauses")
+  check_path(path)
+  if (!is.null(comment)) {
+    if (!is.character(comment) || anyNA(comment)) {
+      stop("`comment` must be a character vector without NA", call. = FALSE)
+    }
+    comment <- unlist(lapply(strsplit(comment, "\r\n|\r|\n"), function(z) {
+      if (length(z)) z else ""
+    }))
   }
-  clauses <- lapply(x, as_literals, arg = "clauses")
+  clauses <- as_clauses(x)
 
   n_vars <- if (length(clauses)) {
     max(
@@ -152,5 +159,12 @@ write_dimacs <- function(x, path, comment = NULL) {
   )
 
   writeLines(c(header, body), path)
+  invisible(path)
+}
+
+check_path <- function(path) {
+  if (!is.character(path) || length(path) != 1L || is.na(path)) {
+    stop("`path` must be a single file path", call. = FALSE)
+  }
   invisible(path)
 }

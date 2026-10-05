@@ -11,15 +11,21 @@ sat_option(solver, name, value)
 
 \item{name}{A single option name.}
 
-\item{value}{An integer to set. When missing, the current value is
-returned instead.}
+\item{value}{A whole number to set, within the option's range. When
+missing, the current value is returned instead.}
 }
 \value{
-The option value; invisibly when setting.
+The option value as an integer; when setting, the value now
+stored, invisibly.
 }
 \description{
 CaDiCaL exposes several hundred integer-valued tuning options, for example
-\code{"elim"}, \code{"vivify"} or \code{"restartint"}. Names are CaDiCaL's own.
+\code{"elim"}, \code{"vivify"} or \code{"restartint"}. Names are CaDiCaL's own; an
+unknown name is an error rather than a silent no-op.
+}
+\details{
+Each option has a range, and a value outside it is an error. CaDiCaL itself
+would clamp it to the nearest bound without saying so.
 }
 \examples{
 s <- sat_solver()

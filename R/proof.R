@@ -34,6 +34,25 @@
 #' proof that most checkers will reject. If a solver is garbage collected
 #' while still tracing, the file is closed then instead.
 #'
+#' @section What the proof proves:
+#'
+#' A DRAT or LRAT proof derives the empty clause from the clauses the checker
+#' is given, so what it certifies depends on what you give the checker:
+#'
+#' * **Plain solve.** The formula you added is unsatisfiable. Give the
+#'   checker that formula, written with [write_dimacs()].
+#' * **Under assumptions.** An `"unsat"` from [sat_solve()] with
+#'   `assumptions` refutes the formula *together with* the failed
+#'   assumptions, not the formula alone. Add each failed assumption (see
+#'   [sat_failed()]) as a unit clause to the CNF given to the checker.
+#' * **Incrementally.** Every clause added while tracing -- including those
+#'   added after an earlier solve, and the blocking clauses
+#'   [sat_solutions()] adds -- is part of the formula the proof refers to,
+#'   and DRAT records none of them. The checker needs all of them.
+#'
+#' A constraint from [sat_constrain()] behaves like an assumption: a
+#' refutation that relies on it refutes the formula plus that clause.
+#'
 #' @section Formats:
 #'
 #' \describe{
@@ -47,9 +66,15 @@
 #'     where the check itself has to be trusted.}
 #' }
 #'
-#' Other formats CaDiCaL supports -- FRAT, VeriPB, IDRUP, LIDRUP -- are
-#' reachable by setting the corresponding option with [sat_option()] before
-#' calling this.
+#' `format` sets CaDiCaL's `lrat` option on every call, so a retry with a
+#' different format gets the format asked for. Other formats CaDiCaL
+#' supports -- FRAT, VeriPB, IDRUP, LIDRUP -- are reachable by setting the
+#' corresponding option with [sat_option()] before calling this. CaDiCaL
+#' picks the first one enabled in the order VeriPB, FRAT, LRAT, IDRUP,
+#' LIDRUP, DRAT, so `"veripb"` and `"frat"` take precedence over `format`.
+#'
+#' If tracing cannot start, for instance because `path` cannot be opened,
+#' the `binary` and `lrat` options are restored to their previous values.
 #'
 #' @param solver A `zusat_solver` with no clauses added yet.
 #' @param path File to write the proof to. Overwritten if it exists.
@@ -96,13 +121,28 @@ sat_trace_proof <- function(
   }
 
   # Format and encoding are options, and like tracing itself they have to be
-  # set while the solver is still being configured.
+  # set while the solver is still being configured. Both are set on every
+  # call, and put back if tracing does not start: setting lrat only when
+  # asked for left a failed LRAT attempt turning a later DRAT request into
+  # LRAT output.
+  previous <- c(
+    binary = sat_option(solver, "binary"),
+    lrat = sat_option(solver, "lrat")
+  )
+  started <- FALSE
+  on.exit(
+    if (!started) {
+      sat_option(solver, "binary", previous[["binary"]])
+      sat_option(solver, "lrat", previous[["lrat"]])
+    },
+    add = TRUE
+  )
+
   sat_option(solver, "binary", as.integer(binary))
-  if (format == "lrat") {
-    sat_option(solver, "lrat", 1L)
-  }
+  sat_option(solver, "lrat", as.integer(format == "lrat"))
 
   .Call(zusat_trace_proof, solver, path.expand(path))
+  started <- TRUE
   invisible(solver)
 }
 
@@ -145,8 +185,14 @@ sat_is_tracing <- function(solver) {
 #'
 #' Emits the conclusion of the last solve into the proof. Only meaningful for
 #' the interactive formats (IDRUP and LIDRUP), where a proof records a whole
-#' session of solves rather than a single refutation. For DRAT and LRAT the
-#' refutation already ends the proof and this does nothing.
+#' session of solves rather than a single refutation. For DRAT and LRAT it
+#' writes nothing: when the solve derived the empty clause, that already ends
+#' the proof, and when it was `"unsat"` only under assumptions or a
+#' constraint, the proof refutes the formula together with them (see
+#' [sat_trace_proof()]).
+#'
+#' It needs a finished solve -- `"sat"`, `"unsat"` or `"unknown"` -- with no
+#' clause or constraint added since; otherwise it is an error.
 #'
 #' @param solver A `zusat_solver`.
 #' @return `solver`, invisibly.

@@ -70,9 +70,8 @@ test_that("sat_value rejects a negative literal", {
 
 test_that("sat_value reports NA for a variable the solver has never seen", {
   # it returned FALSE -- a confident answer about a variable the formula does
-  # not mention. NA is the truthful reading, and matches how an unassigned
-  # variable already reads. Not an error: projecting onto a free variable is
-  # legitimate, and sat_solutions() depends on it.
+  # not mention. NA is the truthful reading. Not an error: projecting onto a
+  # free variable is legitimate, and sat_solutions() depends on it.
   s <- sat_solver(list(1))
   sat_solve(s)
   expect_true(is.na(sat_value(s, 999)))
@@ -136,11 +135,16 @@ test_that("setting an option after clauses is an error, not a contract violation
 })
 
 test_that("the reporting options stay settable at any time", {
-  # CaDiCaL exempts these four from the CONFIGURING requirement
+  # CaDiCaL exempts the reporting options from the CONFIGURING requirement.
+  # Of the four, only "report" exists in this build: -DQUIET compiles out
+  # "quiet" and "verbose", and "log" needs a LOGGING build. Setting those
+  # used to be a silent no-op; it is now the unknown-option error.
   s <- sat_solver(list(c(1, 2)))
   sat_solve(s)
-  for (opt in c("quiet", "report", "verbose")) {
-    expect_silent(sat_option(s, opt, 0))
+  expect_silent(sat_option(s, "report", 0))
+  expect_equal(sat_option(s, "report"), 0L)
+  for (opt in c("quiet", "verbose", "log")) {
+    expect_error(sat_option(s, opt, 0), "unknown option")
   }
 })
 

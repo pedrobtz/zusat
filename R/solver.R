@@ -68,6 +68,98 @@ as_literals <- function(x, arg = "literals") {
   x
 }
 
+# A list of clauses, each coerced with as_literals().
+#
+# NULL is absence everywhere else in the package -- `assumptions = NULL`,
+# `sat_solver(NULL)` -- but as a clause it used to reach C as integer(), the
+# empty clause, which makes every formula unsatisfiable. A NULL in a clause
+# list is nearly always `if (FALSE) ...` or a missing element, so it is an
+# error here; integer() remains the explicit spelling of the empty clause.
+#
+# Every clause is validated before the caller adds any of them, so a bad
+# clause late in a batch cannot leave the earlier ones permanently added.
+as_clauses <- function(x, arg = "clauses") {
+  nulls <- which(vapply(x, is.null, logical(1)))
+  if (length(nulls)) {
+    stop(
+      sprintf(
+        paste0(
+          "clause %d is NULL; use integer() for the empty ",
+          "clause, or drop the element"
+        ),
+        nulls[1]
+      ),
+      call. = FALSE
+    )
+  }
+  lapply(x, as_literals, arg = arg)
+}
+
+# The formula entry points share this. is.list() is TRUE for a data frame,
+# so an accidental data frame -- or a zusat_solution, which is one -- would
+# otherwise be read column by column as clauses.
+check_formula <- function(x, what = "a list of clauses or a zusat_solver") {
+  if (is.data.frame(x) || !is.list(x)) {
+    stop(sprintf("`x` must be %s", what), call. = FALSE)
+  }
+  invisible(x)
+}
+
+# Per-solver R state, kept alive by the external pointer: the ranges of
+# auxiliary variables cardinality encodings have introduced, one row each.
+solver_state <- function(solver) {
+  .Call(zusat_state, solver)
+}
+
+aux_ranges <- function(solver) {
+  ranges <- solver_state(solver)$aux
+  if (is.null(ranges)) matrix(integer(), ncol = 2L) else ranges
+}
+
+record_aux <- function(solver, from, to) {
+  state <- solver_state(solver)
+  state$aux <- rbind(aux_ranges(solver), c(as.integer(from), as.integer(to)))
+  invisible(solver)
+}
+
+# Refuse a user literal over an auxiliary variable. An encoding allocates its
+# auxiliaries above every variable in use at the time; a caller who later
+# numbers their own variables into that range silently merges the two, and
+# the solver then answers a different problem without any error.
+check_not_aux <- function(solver, lits, arg) {
+  ranges <- aux_ranges(solver)
+  if (!nrow(ranges) || !length(lits)) {
+    return(invisible())
+  }
+  v <- abs(lits)
+  i <- findInterval(v, ranges[, 1])
+  hit <- i > 0L & v <= ranges[pmax(i, 1L), 2]
+  if (any(hit)) {
+    stop(
+      sprintf(
+        paste0(
+          "`%s` uses variable %d, an auxiliary variable introduced by an earlier ",
+          "cardinality constraint; number your own variables first with ",
+          "sat_reserve(solver, n) so encodings allocate above them"
+        ),
+        arg,
+        v[hit][1]
+      ),
+      call. = FALSE
+    )
+  }
+  invisible()
+}
+
+# Add already-validated clauses. Internal: sat_solutions() blocks models over
+# auxiliary variables too, which a user call must not do.
+add_clauses <- function(solver, clauses) {
+  for (cl in clauses) {
+    .Call(zusat_add_clause, solver, cl)
+  }
+  invisible(solver)
+}
+
 # Variable numbers, as distinct from literals: positive, not negated.
 #
 # Deliberately not bounded against sat_n_vars(). Asking about a variable the
@@ -110,7 +202,7 @@ as_variables <- function(x, arg = "vars") {
 #' sat_add(s, -2)
 #' sat_solve(s)
 sat_solver <- function(formula = NULL) {
-  solver <- .Call(zusat_solver_new)
+  solver <- .Call(zusat_solver_new, new.env(parent = emptyenv()))
   if (!is.null(formula)) {
     sat_add(solver, formula)
   }
@@ -131,10 +223,15 @@ print.zusat_solver <- function(x, ...) {
 #' "variable i is true", a negative number `-i` is its negation. No
 #' terminating zero is needed; it is added internally.
 #'
+#' Every clause is checked before any is added, so an error part-way through
+#' a list leaves the solver as it was.
+#'
 #' @param solver A `zusat_solver` from [sat_solver()].
 #' @param x Either one clause, as a numeric vector of non-zero literals, or
-#'   several, as a list of such vectors. An empty vector is the empty clause,
-#'   which makes the formula unsatisfiable.
+#'   several, as a list of such vectors. An empty vector such as `integer()`
+#'   is the empty clause, which makes the formula unsatisfiable. `NULL` is
+#'   not a clause and is an error, as is a variable a cardinality constraint
+#'   introduced as auxiliary (see [sat_reserve()]).
 #' @return `solver`, invisibly, so calls can be chained.
 #' @export
 #' @examples
@@ -142,14 +239,17 @@ print.zusat_solver <- function(x, ...) {
 #' sat_add(s, c(1, -2))                    # one clause
 #' sat_add(s, list(c(2, 3), c(-1, 3)))     # several
 sat_add <- function(solver, x) {
-  if (is.list(x)) {
-    for (clause in x) {
-      .Call(zusat_add_clause, solver, as_literals(clause, "clauses"))
-    }
-  } else {
-    .Call(zusat_add_clause, solver, as_literals(x))
+  if (is.null(x)) {
+    stop("`x` is NULL; use integer() for the empty clause", call. = FALSE)
   }
-  invisible(solver)
+  if (is.list(x)) {
+    check_formula(x, "a clause or a list of clauses")
+    clauses <- as_clauses(x)
+  } else {
+    clauses <- list(as_literals(x, "x"))
+  }
+  check_not_aux(solver, unlist(clauses), "x")
+  add_clauses(solver, clauses)
 }
 
 #' Solve a formula
@@ -185,6 +285,7 @@ sat_solve <- function(x, assumptions = integer(), ...) {
 #' @export
 sat_solve.zusat_solver <- function(x, assumptions = integer(), ...) {
   assumptions <- as_literals(assumptions, "assumptions")
+  check_not_aux(x, assumptions, "assumptions")
   started <- proc.time()[["elapsed"]]
   status <- .Call(zusat_solve, x, assumptions)
   elapsed <- proc.time()[["elapsed"]] - started
@@ -199,11 +300,7 @@ sat_solve.zusat_solver <- function(x, assumptions = integer(), ...) {
 #' @rdname sat_solve
 #' @export
 sat_solve.default <- function(x, assumptions = integer(), ...) {
-  # is.list() is TRUE for a data frame, so an accidental data frame -- or a
-  # zusat_solution, which is one -- would otherwise be solved column by column
-  if (is.data.frame(x) || !is.list(x)) {
-    stop("`x` must be a list of clauses or a zusat_solver", call. = FALSE)
-  }
+  check_formula(x)
   sat_solve(sat_solver(x), assumptions = assumptions, ...)
 }
 
@@ -237,10 +334,15 @@ sat_failed <- function(solver, assumptions) {
 #' @param solver A `zusat_solver`.
 #' @param vars Numeric vector of variable indices. Defaults to every variable
 #'   the solver knows about.
-#' @return A logical vector the same length as `vars`. `NA` marks a variable
-#'   carrying no value in this model: either the solver left it unassigned
-#'   because both polarities extend the model, or the formula never mentions
-#'   it at all.
+#' The model is invalidated by anything that changes the formula or the next
+#' solve -- [sat_add()], [sat_constrain()], [sat_reserve()] -- so read it
+#' before making such a call, or solve again.
+#'
+#' @return A logical vector the same length as `vars`. Every variable up to
+#'   [sat_n_vars()] has a value, including one the formula never constrains
+#'   (either value would do, and the solver picks one). `NA` marks a variable
+#'   above [sat_n_vars()], which the solver has never seen. To learn which
+#'   variables are forced rather than merely chosen, see [sat_fixed()].
 #' @export
 #' @examples
 #' s <- sat_solver(list(c(1, 2)))
@@ -283,13 +385,18 @@ sat_n_clauses <- function(solver) {
 #' Get or set a CaDiCaL option
 #'
 #' CaDiCaL exposes several hundred integer-valued tuning options, for example
-#' `"elim"`, `"vivify"` or `"restartint"`. Names are CaDiCaL's own.
+#' `"elim"`, `"vivify"` or `"restartint"`. Names are CaDiCaL's own; an
+#' unknown name is an error rather than a silent no-op.
+#'
+#' Each option has a range, and a value outside it is an error. CaDiCaL itself
+#' would clamp it to the nearest bound without saying so.
 #'
 #' @param solver A `zusat_solver`.
 #' @param name A single option name.
-#' @param value An integer to set. When missing, the current value is
-#'   returned instead.
-#' @return The option value; invisibly when setting.
+#' @param value A whole number to set, within the option's range. When
+#'   missing, the current value is returned instead.
+#' @return The option value as an integer; when setting, the value now
+#'   stored, invisibly.
 #' @export
 #' @examples
 #' s <- sat_solver()
@@ -300,8 +407,31 @@ sat_option <- function(solver, name, value) {
   if (length(name) != 1L || is.na(name)) {
     stop("`name` must be a single option name", call. = FALSE)
   }
+  bounds <- .Call(zusat_option_bounds, name)
+  if (is.null(bounds)) {
+    stop(sprintf("unknown option '%s'", name), call. = FALSE)
+  }
   if (missing(value)) {
     return(.Call(zusat_get_option, solver, name))
+  }
+  # Validated before as.integer(), which would turn 1.9 into 1 and NA or an
+  # overflow into NA_integer_ -- each a stored value nobody asked for.
+  if (!is.numeric(value) || length(value) != 1L || is.na(value)) {
+    stop("`value` must be a single whole number", call. = FALSE)
+  }
+  if (is.finite(value) && value != trunc(value)) {
+    stop("`value` must be a whole number", call. = FALSE)
+  }
+  if (value < bounds[1] || value > bounds[2]) {
+    stop(
+      sprintf(
+        "option '%s' must be between %d and %d",
+        name,
+        bounds[1],
+        bounds[2]
+      ),
+      call. = FALSE
+    )
   }
   # CaDiCaL accepts an option change only while the solver is still being
   # configured -- everything except these four, which affect reporting only.
@@ -322,8 +452,7 @@ sat_option <- function(solver, name, value) {
       call. = FALSE
     )
   }
-  .Call(zusat_set_option, solver, name, as.integer(value))
-  invisible(value)
+  invisible(.Call(zusat_set_option, solver, name, as.integer(value)))
 }
 
 #' Version of the bundled CaDiCaL

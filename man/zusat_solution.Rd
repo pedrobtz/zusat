@@ -10,8 +10,9 @@ frame, with one row per variable and columns:
 \details{
 \describe{
 \item{variable}{integer, the variable number}
-\item{value}{logical, its value in the model. \code{NA} marks a variable the
-solver left unassigned because either polarity extends the model.}
+\item{value}{logical, its value in the model. Every variable the solver
+knows has one, including a variable no clause constrains; use
+\code{\link[=sat_fixed]{sat_fixed()}} to tell a forced value from a chosen one.}
 }
 
 The outcome is carried as an attribute rather than a column, so the object
@@ -27,6 +28,14 @@ Read the outcome with \code{\link[=sat_status]{sat_status()}} or \code{\link[=sa
 
 \code{status} (one of \code{"sat"}, \code{"unsat"}, \code{"unknown"}), \code{n_vars}, \code{n_clauses}
 and \code{elapsed} seconds. Prefer the accessors over reading these directly.
+}
+
+\section{Subsetting}{
+
+Filtering or reordering rows keeps the class, and the attributes go on
+describing the solve that produced the object. Selecting columns gives a
+plain data frame, since the result no longer has the shape the class
+promises.
 }
 
 \examples{

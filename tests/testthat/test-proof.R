@@ -253,5 +253,6 @@ test_that("drat-trim verifies a real refutation", {
     stdout = TRUE,
     stderr = TRUE
   ))
-  expect_true(any(grepl("^s VERIFIED", out)))
+  # trimws(): current drat-trim starts each status line with a carriage return
+  expect_true(any(grepl("^s VERIFIED", trimws(out))))
 })

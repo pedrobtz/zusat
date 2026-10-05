@@ -59,10 +59,12 @@ specification` reports `OK` on R-release and `INFO specified C++17` on
 R-devel — but since the usual advice is to drop such a specification unless
 it is essential, here is why it is.
 
-First, it is what makes the package link correctly at all. Every C++ source is
-under `src/cadical/`, and `R CMD INSTALL` globs only `src/*.c*`, so without
-`CXX_STD` it concludes the package is pure C and links the shared object with
-the C compiler. The result carries no dependency on any C++ runtime. That
+First, it is what first made the package link correctly at all. The vendored
+C++ sources are under `src/cadical/`, and `R CMD INSTALL` globs only
+`src/*.c*`, so while every C++ source lived there, without `CXX_STD` it
+concluded the package was pure C and linked the shared object with the C
+compiler. (`src/zusat_options.cpp` now sits at the top level, so this no
+longer depends on `CXX_STD` alone, but the declaration stays explicit.) The result carries no dependency on any C++ runtime. That
 loads anyway wherever R has already brought in libstdc++, and fails at
 `dlopen` on a libc++ toolchain with `undefined symbol: _ZNSt3__19to_stringEj`.
 This was observed on the `clang23` container and fixed by declaring `CXX_STD`.

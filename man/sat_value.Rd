@@ -10,13 +10,17 @@ sat_value(solver, vars = seq_len(sat_n_vars(solver)))
 \item{solver}{A \code{zusat_solver}.}
 
 \item{vars}{Numeric vector of variable indices. Defaults to every variable
-the solver knows about.}
+the solver knows about.
+The model is invalidated by anything that changes the formula or the next
+solve -- \code{\link[=sat_add]{sat_add()}}, \code{\link[=sat_constrain]{sat_constrain()}}, \code{\link[=sat_reserve]{sat_reserve()}} -- so read it
+before making such a call, or solve again.}
 }
 \value{
-A logical vector the same length as \code{vars}. \code{NA} marks a variable
-carrying no value in this model: either the solver left it unassigned
-because both polarities extend the model, or the formula never mentions
-it at all.
+A logical vector the same length as \code{vars}. Every variable up to
+\code{\link[=sat_n_vars]{sat_n_vars()}} has a value, including one the formula never constrains
+(either value would do, and the solver picks one). \code{NA} marks a variable
+above \code{\link[=sat_n_vars]{sat_n_vars()}}, which the solver has never seen. To learn which
+variables are forced rather than merely chosen, see \code{\link[=sat_fixed]{sat_fixed()}}.
 }
 \description{
 A lower-level alternative to the data frame returned by \code{\link[=sat_solve]{sat_solve()}},

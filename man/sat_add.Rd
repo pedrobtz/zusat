@@ -10,8 +10,10 @@ sat_add(solver, x)
 \item{solver}{A \code{zusat_solver} from \code{\link[=sat_solver]{sat_solver()}}.}
 
 \item{x}{Either one clause, as a numeric vector of non-zero literals, or
-several, as a list of such vectors. An empty vector is the empty clause,
-which makes the formula unsatisfiable.}
+several, as a list of such vectors. An empty vector such as \code{integer()}
+is the empty clause, which makes the formula unsatisfiable. \code{NULL} is
+not a clause and is an error, as is a variable a cardinality constraint
+introduced as auxiliary (see \code{\link[=sat_reserve]{sat_reserve()}}).}
 }
 \value{
 \code{solver}, invisibly, so calls can be chained.
@@ -20,6 +22,10 @@ which makes the formula unsatisfiable.}
 Clauses use DIMACS conventions: a positive number \code{i} is the literal
 "variable i is true", a negative number \code{-i} is its negation. No
 terminating zero is needed; it is added internally.
+}
+\details{
+Every clause is checked before any is added, so an error part-way through
+a list leaves the solver as it was.
 }
 \examples{
 s <- sat_solver()

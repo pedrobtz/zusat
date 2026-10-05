@@ -53,8 +53,9 @@ subset(sol, value)    #> just the true variables
 
 The shape is the same whether or not the formula was satisfiable — an
 unsatisfiable result is a data frame with no rows, not a different type — so
-you can index it without branching first. `NA` marks a variable the solver
-left unassigned because either polarity extends the model.
+you can index it without branching first. Every variable the solver knows
+gets a value, including one no clause constrains; `sat_fixed()` tells a
+forced value from a chosen one.
 
 ``` r
 sat_solve(list(1, -1))
@@ -160,6 +161,21 @@ the pairwise one introduces auxiliary variables that must not collide with
 the rest of the formula. The solver is the only thing that knows which
 variables are already in use.
 
+It cannot know which ones you will use *later*, though. If your model numbers
+more variables after adding a constraint, reserve the whole range first, so
+the auxiliaries are allocated above it:
+
+``` r
+s <- sat_solver()
+sat_reserve(s, 24)         # variables 1..24 are ours
+sat_exactly(s, 1:12, 1)    # auxiliaries start at 25
+sat_exactly(s, 13:24, 1)
+```
+
+Without `sat_reserve()`, the second constraint would be an error: the solver
+remembers which variables are auxiliary and refuses them in clauses,
+assumptions and constraints rather than let the two silently merge.
+
 ### Bounding a solve
 
 SAT is NP-complete, so an innocuous-looking formula can run far longer than
@@ -192,6 +208,14 @@ sat_solve(s)
 sat_constraint_failed(s)      # did the constraint cause unsat?
 
 sat_solve(s)                  # constraint is gone
+```
+
+A constraint covers one solve, and `sat_solutions()` solves once per model,
+so it refuses to start while one is pending. Pass the clause as its
+`constraint` argument instead, which applies it to every solve:
+
+``` r
+sat_solutions(s, constraint = c(-1, -2))
 ```
 
 ### What the solver has already proved
@@ -240,6 +264,16 @@ Then check it with whatever you like:
 drat-trim problem.cnf problem.drat
 #> s VERIFIED
 ```
+
+What the proof refutes is whatever the checker is given, so give it
+everything the solver had:
+
+- after an `"unsat"` under assumptions, the proof refutes the formula *plus*
+  the failed assumptions: add each one (see `sat_failed()`) to the CNF as a
+  unit clause;
+- in incremental use, every clause added while tracing — including the
+  blocking clauses `sat_solutions()` adds — belongs in the CNF too, since
+  DRAT records only derived clauses.
 
 A satisfiable formula needs no proof — the model is the evidence, and
 `sat_assignment()` hands it to you.

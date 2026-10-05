@@ -11,8 +11,7 @@ sat_assignment(x)
 }
 \value{
 A logical vector named by variable number, empty when the formula
-was not satisfiable. \code{NA} marks a variable the solver left unassigned
-because either polarity extends the model.
+was not satisfiable.
 }
 \description{
 Convenient when a model is used to index or subset, where the data frame

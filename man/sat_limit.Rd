@@ -14,7 +14,7 @@ sat_limit(solver, name, value)
 choice: it bounds search effort in the unit solver authors reason about,
 and is roughly proportional to work done.}
 
-\item{value}{Maximum for that measure. A negative value means no limit.}
+\item{value}{Maximum for that measure; see the Values section.}
 }
 \value{
 \code{solver}, invisibly.
@@ -33,6 +33,21 @@ unacceptable: inside a loop, a Shiny app, or a scheduled job.
 
 Like assumptions, limits are consumed by the next \code{\link[=sat_solve]{sat_solve()}} and are not
 retained afterwards. Set them again before each call.
+}
+
+\section{Values}{
+
+
+\code{"conflicts"}, \code{"decisions"} and \code{"ticks"} bound a count of work: \code{0}
+allows none, and \code{Inf} or any negative value removes the bound.
+\code{"preprocessing"} and \code{"localsearch"} instead request a number of rounds,
+\code{0} by default; they take a non-negative whole number, since CaDiCaL
+ignores a negative one. \code{"terminate"} counts how often the solver polls
+for termination; upstream reserves it for testing and debugging, and
+\code{0}, \code{Inf} or a negative value leaves it unbounded.
+
+Values must be whole numbers no larger than \code{.Machine$integer.max}; they
+are checked rather than coerced, so \code{1.5} or \code{2^31} is an error.
 }
 
 \examples{

@@ -41,7 +41,8 @@ and \code{\link[=sat_add]{sat_add()}} to build one up incrementally, \code{\link
 enumerate more than one model.}
 \item{Cardinality}{\code{\link[=sat_at_most]{sat_at_most()}}, \code{\link[=sat_at_least]{sat_at_least()}} and \code{\link[=sat_exactly]{sat_exactly()}}
 encode "at most k of these", which CNF cannot state directly and most
-real models need.}
+real models need. \code{\link[=sat_reserve]{sat_reserve()}} claims your variable range before
+their auxiliary variables are allocated.}
 \item{Steering}{Assumptions via \code{\link[=sat_solve]{sat_solve()}}, a one-shot clause via
 \code{\link[=sat_constrain]{sat_constrain()}}, resource limits via \code{\link[=sat_limit]{sat_limit()}}, and
 \code{\link[=sat_fixed]{sat_fixed()}} for what the solver has already proved.}

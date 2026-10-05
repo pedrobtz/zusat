@@ -3,7 +3,7 @@
 #include <R_ext/Visibility.h>
 
 static const R_CallMethodDef CallEntries[] = {
-  {"zusat_solver_new", (DL_FUNC) &zusat_solver_new, 0},
+  {"zusat_solver_new", (DL_FUNC) &zusat_solver_new, 1},
   {"zusat_add_clause", (DL_FUNC) &zusat_add_clause, 2},
   {"zusat_solve",      (DL_FUNC) &zusat_solve,      2},
   {"zusat_value",      (DL_FUNC) &zusat_value,      2},
@@ -24,6 +24,10 @@ static const R_CallMethodDef CallEntries[] = {
   {"zusat_max_var_get",      (DL_FUNC) &zusat_max_var_get,      0},
   {"zusat_configuring",      (DL_FUNC) &zusat_configuring,      1},
   {"zusat_signature",  (DL_FUNC) &zusat_signature,  0},
+  {"zusat_state",              (DL_FUNC) &zusat_state,              1},
+  {"zusat_option_bounds",      (DL_FUNC) &zusat_option_bounds,      1},
+  {"zusat_constraint_pending", (DL_FUNC) &zusat_constraint_pending, 1},
+  {"zusat_reserve",            (DL_FUNC) &zusat_reserve,            2},
   {NULL, NULL, 0}
 };
 

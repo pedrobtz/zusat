@@ -21,11 +21,19 @@ use \code{split(x, x$solution)} to iterate solution by solution.
 }
 \section{Attributes}{
 
-\code{status}, \code{n_solutions} and \code{complete}. Read them with \code{\link[=sat_status]{sat_status()}},
-\code{\link[=sat_n_solutions]{sat_n_solutions()}} and \code{\link[=sat_complete]{sat_complete()}}.
+\code{status}, \code{n_solutions}, \code{complete} and \code{stopped}. Read them with
+\code{\link[=sat_status]{sat_status()}}, \code{\link[=sat_n_solutions]{sat_n_solutions()}} and \code{\link[=sat_complete]{sat_complete()}}.
 
 \code{\link[=sat_complete]{sat_complete()}} is the one that matters: an enumeration stopped at \code{limit}
 looks exactly like an exhaustive one unless you ask.
+}
+
+\section{Subsetting}{
+
+Filtering or reordering rows keeps the class, and the attributes go on
+describing the enumeration as a whole: \code{\link[=sat_n_solutions]{sat_n_solutions()}} still counts the
+models found, not the rows kept. Selecting columns gives a plain data
+frame, since the result no longer has the shape the class promises.
 }
 
 \examples{

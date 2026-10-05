@@ -26,11 +26,24 @@ sat_limits <- c(
 #' retained afterwards. Set them again before each call.
 #'
 #' @param solver A `zusat_solver`.
+#' @section Values:
+#'
+#' `"conflicts"`, `"decisions"` and `"ticks"` bound a count of work: `0`
+#' allows none, and `Inf` or any negative value removes the bound.
+#' `"preprocessing"` and `"localsearch"` instead request a number of rounds,
+#' `0` by default; they take a non-negative whole number, since CaDiCaL
+#' ignores a negative one. `"terminate"` counts how often the solver polls
+#' for termination; upstream reserves it for testing and debugging, and
+#' `0`, `Inf` or a negative value leaves it unbounded.
+#'
+#' Values must be whole numbers no larger than `.Machine$integer.max`; they
+#' are checked rather than coerced, so `1.5` or `2^31` is an error.
+#'
 #' @param name One of `"conflicts"`, `"decisions"`, `"preprocessing"`,
 #'   `"localsearch"`, `"ticks"` or `"terminate"`. `"conflicts"` is the usual
 #'   choice: it bounds search effort in the unit solver authors reason about,
 #'   and is roughly proportional to work done.
-#' @param value Maximum for that measure. A negative value means no limit.
+#' @param value Maximum for that measure; see the Values section.
 #' @return `solver`, invisibly.
 #' @seealso [sat_solve()], [sat_status()]
 #' @export
@@ -53,11 +66,43 @@ sat_limit <- function(solver, name, value) {
       call. = FALSE
     )
   }
+  .Call(zusat_limit, solver, name, check_limit_value(name, value))
+  invisible(solver)
+}
+
+# Checked before as.integer(), which turned 2^31 into NA_integer_ -- passed
+# to CaDiCaL as a negative, so an unbounded solve -- and -0.5 into 0, a
+# budget of nothing where "no limit" was meant.
+check_limit_value <- function(name, value) {
   if (!is.numeric(value) || length(value) != 1L || is.na(value)) {
     stop("`value` must be a single number", call. = FALSE)
   }
-  .Call(zusat_limit, solver, name, as.integer(value))
-  invisible(solver)
+  rounds <- name %in% c("preprocessing", "localsearch")
+  if (rounds && (!is.finite(value) || value < 0)) {
+    stop(
+      sprintf("`value` for '%s' must be a non-negative whole number", name),
+      call. = FALSE
+    )
+  }
+  if (is.infinite(value)) {
+    return(-1L) # unbounded, in CaDiCaL's spelling
+  }
+  if (value != trunc(value)) {
+    stop("`value` must be a whole number", call. = FALSE)
+  }
+  if (value < 0) {
+    return(-1L)
+  }
+  if (value > .Machine$integer.max) {
+    stop(
+      sprintf(
+        "`value` must be at most %d, or Inf for no limit",
+        .Machine$integer.max
+      ),
+      call. = FALSE
+    )
+  }
+  as.integer(value)
 }
 
 #' Add a clause that holds for one solve only
@@ -73,9 +118,15 @@ sat_limit <- function(solver, name, value) {
 #' A solver holds at most one constraint at a time; setting a new one replaces
 #' the last.
 #'
+#' A constraint covers one solve, so [sat_solutions()], which solves once per
+#' model, refuses to start while one is pending: it would hold for the first
+#' model and not the rest. Pass it as the `constraint` argument of
+#' [sat_solutions()] instead, which applies it to every solve.
+#'
 #' @param solver A `zusat_solver`.
-#' @param literals Numeric vector of non-zero literals. An empty vector sets
-#'   the empty constraint, which makes the next solve unsatisfiable.
+#' @param literals Numeric vector of non-zero literals. An empty vector such as
+#'   `integer()` sets the empty constraint, which makes the next solve
+#'   unsatisfiable. `NULL` is an error.
 #' @return `solver`, invisibly.
 #' @seealso [sat_constraint_failed()] to learn whether it caused
 #'   unsatisfiability.
@@ -90,7 +141,15 @@ sat_limit <- function(solver, name, value) {
 #' # gone again
 #' sat_solve(s)
 sat_constrain <- function(solver, literals) {
-  .Call(zusat_constrain, solver, as_literals(literals, "literals"))
+  if (is.null(literals)) {
+    stop(
+      "`literals` is NULL; use integer() for the empty constraint",
+      call. = FALSE
+    )
+  }
+  literals <- as_literals(literals, "literals")
+  check_not_aux(solver, literals, "literals")
+  .Call(zusat_constrain, solver, literals)
   invisible(solver)
 }
 
