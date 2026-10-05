@@ -31,7 +31,8 @@
 #'     enumerate more than one model.}
 #'   \item{Cardinality}{[sat_at_most()], [sat_at_least()] and [sat_exactly()]
 #'     encode "at most k of these", which CNF cannot state directly and most
-#'     real models need.}
+#'     real models need. [sat_reserve()] claims your variable range before
+#'     their auxiliary variables are allocated.}
 #'   \item{Steering}{Assumptions via [sat_solve()], a one-shot clause via
 #'     [sat_constrain()], resource limits via [sat_limit()], and
 #'     [sat_fixed()] for what the solver has already proved.}

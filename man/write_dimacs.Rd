@@ -12,7 +12,8 @@ write_dimacs(x, path, comment = NULL)
 \item{path}{Path to write to.}
 
 \item{comment}{Optional character vector written as \code{c} comment lines at
-the top of the file.}
+the top of the file. An element containing line breaks becomes several
+comment lines, so a comment can never be read back as formula.}
 }
 \value{
 \code{path}, invisibly.

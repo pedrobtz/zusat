@@ -15,8 +15,15 @@ sat_conclude(solver)
 \description{
 Emits the conclusion of the last solve into the proof. Only meaningful for
 the interactive formats (IDRUP and LIDRUP), where a proof records a whole
-session of solves rather than a single refutation. For DRAT and LRAT the
-refutation already ends the proof and this does nothing.
+session of solves rather than a single refutation. For DRAT and LRAT it
+writes nothing: when the solve derived the empty clause, that already ends
+the proof, and when it was \code{"unsat"} only under assumptions or a
+constraint, the proof refutes the formula together with them (see
+\code{\link[=sat_trace_proof]{sat_trace_proof()}}).
+}
+\details{
+It needs a finished solve -- \code{"sat"}, \code{"unsat"} or \code{"unknown"} -- with no
+clause or constraint added since; otherwise it is an error.
 }
 \examples{
 # a no-op for DRAT, but harmless and shown here for the call shape

@@ -58,6 +58,28 @@ proof that most checkers will reject. If a solver is garbage collected
 while still tracing, the file is closed then instead.
 }
 
+\section{What the proof proves}{
+
+
+A DRAT or LRAT proof derives the empty clause from the clauses the checker
+is given, so what it certifies depends on what you give the checker:
+\itemize{
+\item \strong{Plain solve.} The formula you added is unsatisfiable. Give the
+checker that formula, written with \code{\link[=write_dimacs]{write_dimacs()}}.
+\item \strong{Under assumptions.} An \code{"unsat"} from \code{\link[=sat_solve]{sat_solve()}} with
+\code{assumptions} refutes the formula \emph{together with} the failed
+assumptions, not the formula alone. Add each failed assumption (see
+\code{\link[=sat_failed]{sat_failed()}}) as a unit clause to the CNF given to the checker.
+\item \strong{Incrementally.} Every clause added while tracing -- including those
+added after an earlier solve, and the blocking clauses
+\code{\link[=sat_solutions]{sat_solutions()}} adds -- is part of the formula the proof refers to,
+and DRAT records none of them. The checker needs all of them.
+}
+
+A constraint from \code{\link[=sat_constrain]{sat_constrain()}} behaves like an assumption: a
+refutation that relies on it refutes the formula plus that clause.
+}
+
 \section{Formats}{
 
 
@@ -72,9 +94,15 @@ Larger files, far faster and simpler to check, and the format used
 where the check itself has to be trusted.}
 }
 
-Other formats CaDiCaL supports -- FRAT, VeriPB, IDRUP, LIDRUP -- are
-reachable by setting the corresponding option with \code{\link[=sat_option]{sat_option()}} before
-calling this.
+\code{format} sets CaDiCaL's \code{lrat} option on every call, so a retry with a
+different format gets the format asked for. Other formats CaDiCaL
+supports -- FRAT, VeriPB, IDRUP, LIDRUP -- are reachable by setting the
+corresponding option with \code{\link[=sat_option]{sat_option()}} before calling this. CaDiCaL
+picks the first one enabled in the order VeriPB, FRAT, LRAT, IDRUP,
+LIDRUP, DRAT, so \code{"veripb"} and \code{"frat"} take precedence over \code{format}.
+
+If tracing cannot start, for instance because \code{path} cannot be opened,
+the \code{binary} and \code{lrat} options are restored to their previous values.
 }
 
 \examples{

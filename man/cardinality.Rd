@@ -62,6 +62,27 @@ make that the caller's problem, and a collision does not raise an error --
 it silently changes what the formula means.
 }
 
+\section{Reserve your variables first}{
+
+
+Auxiliaries are allocated above every variable in use \emph{so far}, so a
+variable you only introduce later may land on one. The solver remembers
+which variables are auxiliary and refuses them in \code{\link[=sat_add]{sat_add()}},
+\code{\link[=sat_constrain]{sat_constrain()}}, assumptions, \code{vars} in \code{\link[=sat_solutions]{sat_solutions()}} and these
+functions, rather than let the two silently merge. To avoid the error,
+declare your whole variable range up front with \code{\link[=sat_reserve]{sat_reserve()}}:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{s <- sat_solver()
+sat_reserve(s, 24)       # variables 1..24 are ours
+sat_exactly(s, 1:12, 1)  # auxiliaries now start at 25
+sat_exactly(s, 13:24, 1)
+}\if{html}{\out{</div>}}
+
+A constraint is added whole or not at all: if it cannot be encoded, for
+instance because its auxiliaries would pass the maximum variable index,
+nothing is added.
+}
+
 \section{Choosing an encoding}{
 
 

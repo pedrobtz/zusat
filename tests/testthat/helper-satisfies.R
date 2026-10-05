@@ -6,13 +6,17 @@
 # upgrade that happens to pick a different valid model.
 #
 # `m` is a named logical vector as returned by sat_assignment(), indexed by
-# variable number. Unassigned variables (NA) are treated as TRUE; either
-# polarity extends the model, so the caller may pick freely.
+# variable number. NA (a variable above sat_n_vars(), which no clause can
+# mention) is treated as TRUE; it is free, so either value would do.
 satisfies_all <- function(formula, m) {
   m[is.na(m)] <- TRUE
-  satisfied <- vapply(formula, function(clause) {
-    values <- m[as.character(abs(clause))]
-    any(ifelse(clause > 0, values, !values))
-  }, logical(1))
+  satisfied <- vapply(
+    formula,
+    function(clause) {
+      values <- m[as.character(abs(clause))]
+      any(ifelse(clause > 0, values, !values))
+    },
+    logical(1)
+  )
   all(satisfied)
 }

@@ -18,7 +18,7 @@
 #include <R.h>
 #include <Rinternals.h>
 
-SEXP zusat_solver_new(void);
+SEXP zusat_solver_new(SEXP state);
 SEXP zusat_add_clause(SEXP xptr, SEXP lits);
 SEXP zusat_solve(SEXP xptr, SEXP assumptions);
 SEXP zusat_value(SEXP xptr, SEXP vars);
@@ -39,5 +39,9 @@ SEXP zusat_conclude(SEXP xptr);
 SEXP zusat_max_var_get(void);
 SEXP zusat_configuring(SEXP xptr);
 SEXP zusat_signature(void);
+SEXP zusat_state(SEXP xptr);
+SEXP zusat_option_bounds(SEXP name);
+SEXP zusat_constraint_pending(SEXP xptr);
+SEXP zusat_reserve(SEXP xptr, SEXP n);
 
 #endif /* ZUSAT_H */

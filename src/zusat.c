@@ -23,7 +23,11 @@
 /*                                                                     */
 /* And enough state to answer "is this call legal right now?" before   */
 /* reaching CaDiCaL, whose own REQUIRE macros report through           */
-/* __PRETTY_FUNCTION__ and internal file names.                        */
+/* __PRETTY_FUNCTION__ and internal file names. That state has to be   */
+/* invalidated by every call that moves CaDiCaL out of SATISFIED or    */
+/* UNSATISFIED -- adding a clause, assuming, constraining, declaring   */
+/* variables -- not only refreshed by the calls that move it in, or    */
+/* the guard passes on a stale answer and CaDiCaL's REQUIRE fires.     */
 
 typedef struct {
   CCaDiCaL *solver;
@@ -31,12 +35,34 @@ typedef struct {
   int proof_traced;  /* 1: CaDiCaL is tracing to it, close its side first */
   int interrupted;   /* address handed to ccadical_set_terminate */
   int configuring;   /* 1 until the first clause, constraint or solve */
-  int last_status;   /* 0 none yet, 10 satisfied, 20 unsatisfied */
+  int last_status;   /* 0 none/invalidated, 10 satisfied, 20 unsatisfied */
+  int concludable;   /* 1: a solve or simplify finished, nothing since */
+  int constraint_pending; /* 1: a constraint awaits the next solve */
 } zusat_handle;
+
+/* Every handle carries this tag. Without checking it, any external pointer
+   -- a registered routine's address, another package's handle -- was read
+   as a zusat_handle and dereferenced, which crashes R. */
+static SEXP handle_tag(void) {
+  static SEXP tag = NULL;
+  if (tag == NULL)
+    tag = Rf_install("zusat_solver");
+  return tag;
+}
+
+/* Called before any CaDiCaL call that can change its state, so the cached
+   answers above never outlive the state they describe. */
+static void invalidate(zusat_handle *h) {
+  h->configuring = 0;
+  h->last_status = 0;
+  h->concludable = 0;
+}
 
 static zusat_handle *handle_from(SEXP xptr) {
   if (TYPEOF(xptr) != EXTPTRSXP)
     Rf_error("invalid solver handle");
+  if (R_ExternalPtrTag(xptr) != handle_tag())
+    Rf_error("not a zusat solver handle");
   zusat_handle *h = (zusat_handle *) R_ExternalPtrAddr(xptr);
   if (h == NULL)
     Rf_error("solver handle is no longer valid");
@@ -66,7 +92,7 @@ static void zusat_finalize(SEXP xptr) {
   }
 }
 
-SEXP zusat_solver_new(void) {
+SEXP zusat_solver_new(SEXP state) {
   zusat_handle *h = (zusat_handle *) calloc(1, sizeof(zusat_handle));
   if (h == NULL)
     Rf_error("could not allocate solver handle");
@@ -76,7 +102,9 @@ SEXP zusat_solver_new(void) {
     Rf_error("could not allocate CaDiCaL solver");
   }
   h->configuring = 1;
-  SEXP xptr = PROTECT(R_MakeExternalPtr(h, Rf_install("zusat_solver"), R_NilValue));
+  /* `state` is an environment the R layer keeps per solver (auxiliary
+     variable ranges); the pointer's protected slot keeps it alive. */
+  SEXP xptr = PROTECT(R_MakeExternalPtr(h, handle_tag(), state));
   R_RegisterCFinalizerEx(xptr, zusat_finalize, TRUE);
   Rf_setAttrib(xptr, R_ClassSymbol, Rf_mkString("zusat_solver"));
   UNPROTECT(1);
@@ -169,8 +197,19 @@ SEXP zusat_tracing_proof(SEXP xptr) {
 }
 
 SEXP zusat_conclude(SEXP xptr) {
-  ccadical_conclude(solver_from(xptr));
+  zusat_handle *h = handle_from(xptr);
+  /* conclude() requires SATISFIED, UNSATISFIED or INCONCLUSIVE: a solve that
+     finished, including one that returned "unknown", with nothing since. */
+  if (!h->concludable)
+    Rf_error("no solve to conclude: call sat_solve() first, and conclude "
+             "before adding clauses or constraints");
+  ccadical_conclude(h->solver);
   return R_NilValue;
+}
+
+SEXP zusat_state(SEXP xptr) {
+  handle_from(xptr);
+  return R_ExternalPtrProtected(xptr);
 }
 
 /* ------------------------------------------------------------------ */
@@ -208,7 +247,7 @@ SEXP zusat_add_clause(SEXP xptr, SEXP lits) {
   const int *p = INTEGER(lits);
   check_lits(p, n);
 
-  h->configuring = 0;
+  invalidate(h);
   for (R_xlen_t i = 0; i < n; i++)
     ccadical_add(h->solver, p[i]);
   ccadical_add(h->solver, 0); /* terminate clause */
@@ -228,7 +267,7 @@ SEXP zusat_solve(SEXP xptr, SEXP assumptions) {
   const int *ap = INTEGER(assumptions);
   check_lits(ap, na);
 
-  h->configuring = 0;
+  invalidate(h);
   for (R_xlen_t i = 0; i < na; i++)
     ccadical_assume(h->solver, ap[i]);
 
@@ -236,14 +275,16 @@ SEXP zusat_solve(SEXP xptr, SEXP assumptions) {
   ccadical_set_terminate(h->solver, &h->interrupted, terminate_cb);
   int res = ccadical_solve(h->solver);
   ccadical_set_terminate(h->solver, NULL, NULL);
+  /* The solve consumed the constraint, whatever it returned. */
+  h->constraint_pending = 0;
 
   if (h->interrupted) {
     /* CaDiCaL has unwound cleanly; now it is safe to longjmp. */
-    h->last_status = 0;
     Rf_error("solve interrupted");
   }
 
   h->last_status = res;
+  h->concludable = 1;
 
   const char *status;
   switch (res) {
@@ -320,24 +361,57 @@ SEXP zusat_configuring(SEXP xptr) {
   return Rf_ScalarLogical(handle_from(xptr)->configuring != 0);
 }
 
+/* Defined in zusat_options.cpp: CaDiCaL's option table is C++ only. */
+int zusat_option_range(const char *name, int *lo, int *hi);
+
+static const char *option_name(SEXP name) {
+  if (TYPEOF(name) != STRSXP || XLENGTH(name) != 1 ||
+      STRING_ELT(name, 0) == NA_STRING)
+    Rf_error("option name must be a single string");
+  const char *nm = CHAR(STRING_ELT(name, 0));
+  int lo, hi;
+  if (!zusat_option_range(nm, &lo, &hi))
+    Rf_error("unknown option '%s'", nm);
+  return nm;
+}
+
+SEXP zusat_option_bounds(SEXP name) {
+  if (TYPEOF(name) != STRSXP || XLENGTH(name) != 1 ||
+      STRING_ELT(name, 0) == NA_STRING)
+    Rf_error("option name must be a single string");
+  int lo, hi;
+  if (!zusat_option_range(CHAR(STRING_ELT(name, 0)), &lo, &hi))
+    return R_NilValue;
+  SEXP out = PROTECT(Rf_allocVector(INTSXP, 2));
+  INTEGER(out)[0] = lo;
+  INTEGER(out)[1] = hi;
+  UNPROTECT(1);
+  return out;
+}
+
 SEXP zusat_set_option(SEXP xptr, SEXP name, SEXP value) {
   zusat_handle *h = handle_from(xptr);
-  if (TYPEOF(name) != STRSXP || XLENGTH(name) != 1)
-    Rf_error("option name must be a single string");
-  if (TYPEOF(value) != INTSXP || XLENGTH(value) != 1)
+  const char *nm = option_name(name);
+  if (TYPEOF(value) != INTSXP || XLENGTH(value) != 1 ||
+      INTEGER(value)[0] == NA_INTEGER)
     Rf_error("option value must be a single integer");
+  int lo, hi;
+  zusat_option_range(nm, &lo, &hi);
+  int v = INTEGER(value)[0];
+  /* CaDiCaL would clamp silently, leaving a stored value the caller never
+     asked for. The R layer checks first so the message is its own. */
+  if (v < lo || v > hi)
+    Rf_error("option '%s' must be between %d and %d", nm, lo, hi);
   /* Solver::set requires state CONFIGURING for everything except the four
      reporting options. The R layer checks first so the message names the
      option; this is the last line of defence. */
-  ccadical_set_option(h->solver, CHAR(STRING_ELT(name, 0)), INTEGER(value)[0]);
-  return R_NilValue;
+  ccadical_set_option(h->solver, nm, v);
+  return Rf_ScalarInteger(ccadical_get_option(h->solver, nm));
 }
 
 SEXP zusat_get_option(SEXP xptr, SEXP name) {
   CCaDiCaL *s = solver_from(xptr);
-  if (TYPEOF(name) != STRSXP || XLENGTH(name) != 1)
-    Rf_error("option name must be a single string");
-  return Rf_ScalarInteger(ccadical_get_option(s, CHAR(STRING_ELT(name, 0))));
+  return Rf_ScalarInteger(ccadical_get_option(s, option_name(name)));
 }
 
 /* ------------------------------------------------------------------ */
@@ -347,7 +421,8 @@ SEXP zusat_limit(SEXP xptr, SEXP name, SEXP value) {
   CCaDiCaL *s = solver_from(xptr);
   if (TYPEOF(name) != STRSXP || XLENGTH(name) != 1)
     Rf_error("limit name must be a single string");
-  if (TYPEOF(value) != INTSXP || XLENGTH(value) != 1)
+  if (TYPEOF(value) != INTSXP || XLENGTH(value) != 1 ||
+      INTEGER(value)[0] == NA_INTEGER)
     Rf_error("limit value must be a single integer");
   /* ccadical_limit drops the bool that says whether the name was known, so
      an unrecognised name is silently ignored and the solve runs unbounded.
@@ -365,12 +440,20 @@ SEXP zusat_constrain(SEXP xptr, SEXP lits) {
   const int *p = INTEGER(lits);
   check_lits(p, n);
 
-  h->configuring = 0;
+  invalidate(h);
   for (R_xlen_t i = 0; i < n; i++)
     ccadical_constrain(h->solver, p[i]);
   ccadical_constrain(h->solver, 0); /* terminate the constraint clause */
+  h->constraint_pending = 1;
 
   return R_NilValue;
+}
+
+/* CaDiCaL forgets a constraint once a solve has used it, so code that
+   solves repeatedly -- sat_solutions() -- has to know one is waiting, or
+   every solve after the first runs without it. */
+SEXP zusat_constraint_pending(SEXP xptr) {
+  return Rf_ScalarLogical(handle_from(xptr)->constraint_pending != 0);
 }
 
 SEXP zusat_constraint_failed(SEXP xptr) {
@@ -406,18 +489,18 @@ SEXP zusat_simplify(SEXP xptr) {
 
   /* Inprocessing polls the terminator from two dozen modules, so a long
      simplify is interruptible on the same terms as a solve. */
-  h->configuring = 0;
+  invalidate(h);
   h->interrupted = 0;
   ccadical_set_terminate(h->solver, &h->interrupted, terminate_cb);
   int res = ccadical_simplify(h->solver);
   ccadical_set_terminate(h->solver, NULL, NULL);
+  h->constraint_pending = 0;
 
-  if (h->interrupted) {
-    h->last_status = 0;
+  if (h->interrupted)
     Rf_error("simplify interrupted");
-  }
 
   h->last_status = res;
+  h->concludable = 1;
 
   const char *status;
   switch (res) {
@@ -434,6 +517,23 @@ SEXP zusat_n_clauses(SEXP xptr) {
      are deliberately excluded: they are an artefact of search, not input. */
   double n = (double) ccadical_irredundant(solver_from(xptr));
   return Rf_ScalarReal(n);
+}
+
+/* Declare variables 1..n without adding a clause, so later encodings
+   allocate their auxiliaries above them. */
+SEXP zusat_reserve(SEXP xptr, SEXP n) {
+  zusat_handle *h = handle_from(xptr);
+  if (TYPEOF(n) != INTSXP || XLENGTH(n) != 1 || INTEGER(n)[0] == NA_INTEGER)
+    Rf_error("number of variables must be a single integer");
+  int want = INTEGER(n)[0];
+  if (want < 0 || want > ZUSAT_MAX_VAR)
+    Rf_error("number of variables must be between 0 and %d", ZUSAT_MAX_VAR);
+  int have = ccadical_vars(h->solver);
+  if (want > have) {
+    invalidate(h);
+    ccadical_declare_more_variables(h->solver, want - have);
+  }
+  return Rf_ScalarInteger(ccadical_vars(h->solver));
 }
 
 SEXP zusat_n_vars(SEXP xptr) {

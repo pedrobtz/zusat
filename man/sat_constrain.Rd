@@ -9,8 +9,9 @@ sat_constrain(solver, literals)
 \arguments{
 \item{solver}{A \code{zusat_solver}.}
 
-\item{literals}{Numeric vector of non-zero literals. An empty vector sets
-the empty constraint, which makes the next solve unsatisfiable.}
+\item{literals}{Numeric vector of non-zero literals. An empty vector such as
+\code{integer()} sets the empty constraint, which makes the next solve
+unsatisfiable. \code{NULL} is an error.}
 }
 \value{
 \code{solver}, invisibly.
@@ -27,6 +28,11 @@ way to take it back.
 
 A solver holds at most one constraint at a time; setting a new one replaces
 the last.
+
+A constraint covers one solve, so \code{\link[=sat_solutions]{sat_solutions()}}, which solves once per
+model, refuses to start while one is pending: it would hold for the first
+model and not the rest. Pass it as the \code{constraint} argument of
+\code{\link[=sat_solutions]{sat_solutions()}} instead, which applies it to every solve.
 }
 \examples{
 s <- sat_solver(list(c(1, 2)))

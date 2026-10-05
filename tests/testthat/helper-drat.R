@@ -17,15 +17,20 @@ decode_binary_drat <- function(path) {
   while (i <= length(bytes)) {
     marker <- bytes[i]
     if (!marker %in% as.raw(c(0x61, 0x64))) {
-      stop(sprintf("byte %d: expected a step marker, got 0x%02x", i,
-                   as.integer(marker)))
+      stop(sprintf(
+        "byte %d: expected a step marker, got 0x%02x",
+        i,
+        as.integer(marker)
+      ))
     }
     kind <- if (marker == as.raw(0x61)) "a" else "d"
     i <- i + 1L
 
     lits <- integer()
     repeat {
-      if (i > length(bytes)) stop("truncated proof: no terminator")
+      if (i > length(bytes)) {
+        stop("truncated proof: no terminator")
+      }
       if (bytes[i] == as.raw(0)) {
         i <- i + 1L
         break
@@ -33,7 +38,9 @@ decode_binary_drat <- function(path) {
       x <- 0
       shift <- 0
       repeat {
-        if (i > length(bytes)) stop("truncated proof: no terminator")
+        if (i > length(bytes)) {
+          stop("truncated proof: no terminator")
+        }
         b <- as.integer(bytes[i])
         i <- i + 1L
         x <- x + bitwAnd(b, 0x7f) * 2^shift
@@ -41,7 +48,9 @@ decode_binary_drat <- function(path) {
         if (bitwAnd(b, 0x80) == 0L) break
       }
       lit <- as.integer(x %/% 2)
-      if (x %% 2 == 1) lit <- -lit
+      if (x %% 2 == 1) {
+        lit <- -lit
+      }
       lits <- c(lits, lit)
     }
     steps[[length(steps) + 1L]] <- list(kind = kind, literals = lits)
@@ -56,7 +65,9 @@ parse_text_drat <- function(path) {
   lapply(lines, function(line) {
     tokens <- strsplit(line, "[[:space:]]+")[[1]]
     kind <- if (identical(tokens[1], "d")) "d" else "a"
-    if (kind == "d") tokens <- tokens[-1]
+    if (kind == "d") {
+      tokens <- tokens[-1]
+    }
     values <- as.integer(tokens)
     list(kind = kind, literals = values[values != 0L])
   })

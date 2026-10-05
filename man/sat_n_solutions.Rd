@@ -14,8 +14,9 @@ sat_complete(x)
 }
 \value{
 \code{sat_n_solutions()} returns a count. \code{sat_complete()} returns
-\code{TRUE} when the enumeration ran out of models rather than hitting
-\code{limit}.
+\code{TRUE} only when the enumeration proved there are no further models:
+\code{FALSE} when it stopped at \code{limit}, and \code{FALSE} when a solve returned
+\code{"unknown"}, for instance because of \code{\link[=sat_limit]{sat_limit()}}.
 }
 \description{
 \code{sat_complete()} is the part worth checking. \code{\link[=sat_solutions]{sat_solutions()}} stops at

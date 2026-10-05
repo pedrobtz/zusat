@@ -6,11 +6,32 @@
 \alias{sat_solutions.zusat_solver}
 \title{Enumerate satisfying assignments}
 \usage{
-sat_solutions(x, limit = 1000, vars = NULL, assumptions = integer(), ...)
+sat_solutions(
+  x,
+  limit = 1000,
+  vars = NULL,
+  assumptions = integer(),
+  constraint = NULL,
+  ...
+)
 
-\method{sat_solutions}{default}(x, limit = 1000, vars = NULL, assumptions = integer(), ...)
+\method{sat_solutions}{default}(
+  x,
+  limit = 1000,
+  vars = NULL,
+  assumptions = integer(),
+  constraint = NULL,
+  ...
+)
 
-\method{sat_solutions}{zusat_solver}(x, limit = 1000, vars = NULL, assumptions = integer(), ...)
+\method{sat_solutions}{zusat_solver}(
+  x,
+  limit = 1000,
+  vars = NULL,
+  assumptions = integer(),
+  constraint = NULL,
+  ...
+)
 }
 \arguments{
 \item{x}{A list of clauses, or a \code{zusat_solver}.}
@@ -25,13 +46,19 @@ formula.}
 \item{assumptions}{Literals assumed true for every solve in the
 enumeration.}
 
+\item{constraint}{Optional clause, as for \code{\link[=sat_constrain]{sat_constrain()}}, that every
+model must satisfy. It is applied to each solve of the enumeration and
+is not retained afterwards. A constraint already set on the solver with
+\code{\link[=sat_constrain]{sat_constrain()}} would cover only the first solve, so enumerating while
+one is pending is an error.}
+
 \item{...}{Passed to methods.}
 }
 \value{
 A \link{zusat_solutions} object: a data frame with one row per variable
 per solution, with columns \code{solution}, \code{variable} and \code{value}. Use
 \code{\link[=sat_complete]{sat_complete()}} to tell an exhausted enumeration from one that stopped
-at \code{limit}.
+at \code{limit} or whose search gave up.
 }
 \description{
 Finds distinct models, not just one. After each model the negation of that

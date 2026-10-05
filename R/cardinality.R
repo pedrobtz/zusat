@@ -11,6 +11,11 @@
 # sat_n_vars(), which is the one number that is always right. Handing the
 # caller a bare list of clauses would make that their problem, and a silent
 # collision does not error -- it quietly changes what the formula means.
+#
+# Allocating above what exists cannot protect variables the caller has not
+# used yet, though. So the solver records each auxiliary range, every user
+# entry point refuses a literal inside one, and sat_reserve() lets the caller
+# claim their variable range before any encoding allocates.
 
 # Forbid every (k+1)-subset. No auxiliary variables, choose(n, k+1) clauses.
 encode_pairwise <- function(literals, k) {
@@ -46,7 +51,9 @@ encode_sequential <- function(literals, k, top) {
 
   add(-literals[1], s(1, 1))
   if (k > 1L) {
-    for (j in 2:k) add(-s(1, j))
+    for (j in 2:k) {
+      add(-s(1, j))
+    }
   }
 
   if (n > 2L) {
@@ -81,34 +88,71 @@ choose_encoding <- function(encoding, n, k) {
   if (suppressWarnings(choose(n, k + 1L)) <= 64) "pairwise" else "sequential"
 }
 
-add_at_most <- function(solver, literals, k, encoding) {
+# "At most k of literals", as clauses plus the highest variable used. `top`
+# is the highest variable in use before this encoding; auxiliaries go above.
+encode_at_most <- function(literals, k, encoding, top) {
   n <- length(literals)
-
   if (k >= n) {
-    return(invisible(solver)) # nothing to forbid
+    return(list(clauses = list(), top = top)) # nothing to forbid
   }
   if (k == 0L) {
-    for (l in literals) .Call(zusat_add_clause, solver, as_literals(-l))
-    return(invisible(solver))
+    return(list(clauses = lapply(literals, function(l) -l), top = top))
   }
+  if (choose_encoding(encoding, n, k) == "pairwise") {
+    return(list(clauses = encode_pairwise(literals, k), top = top))
+  }
+  # Checked before building anything: (n - 1) * k can be large enough to
+  # overflow integer arithmetic, let alone pass the variable ceiling.
+  needed <- as.numeric(top) + (n - 1) * k
+  if (needed > max_var()) {
+    stop(
+      sprintf(
+        paste0(
+          "this encoding needs auxiliary variables up to %s, ",
+          "but variables must be at most %d"
+        ),
+        format(needed, scientific = FALSE),
+        max_var()
+      ),
+      call. = FALSE
+    )
+  }
+  encode_sequential(literals, k, top = as.integer(top))
+}
 
-  encoding <- choose_encoding(encoding, n, k)
+# "At least k of literals" is "at most n - k of them are false".
+encode_at_least <- function(literals, k, encoding, top) {
+  n <- length(literals)
+  if (k == 0L) {
+    return(list(clauses = list(), top = top)) # always satisfied
+  }
+  if (k > n) {
+    # impossible: the empty clause rather than pretend otherwise
+    return(list(clauses = list(integer()), top = top))
+  }
+  encode_at_most(-literals, n - k, encoding, top)
+}
 
-  if (encoding == "pairwise") {
-    for (cl in encode_pairwise(literals, k)) {
-      .Call(zusat_add_clause, solver, as_literals(cl))
-    }
-  } else {
-    # Auxiliary variables must clear both what the solver already knows and
-    # the literals themselves. On a fresh solver sat_n_vars() is 0, so using
-    # it alone would allocate aux variables right on top of the literals
-    # being constrained -- which does not error, it silently encodes a
-    # different constraint.
-    top <- max(sat_n_vars(solver), max(abs(literals)))
-    enc <- encode_sequential(literals, k, top = top)
-    for (cl in enc$clauses) {
-      .Call(zusat_add_clause, solver, as_literals(cl))
-    }
+# Auxiliary variables must clear both what the solver already knows and the
+# literals themselves. On a fresh solver sat_n_vars() is 0, so using it alone
+# would allocate aux variables right on top of the literals being
+# constrained -- which does not error, it silently encodes a different
+# constraint.
+aux_floor <- function(solver, literals) {
+  as.integer(max(sat_n_vars(solver), abs(literals), 0L))
+}
+
+# Validate the user's literals, then commit a whole encoding at once. Every
+# clause is built and checked before the first is added, so a failure leaves
+# the solver as it was rather than holding half a constraint.
+add_cardinality <- function(solver, literals, encode) {
+  check_not_aux(solver, literals, "literals")
+  floor <- aux_floor(solver, literals)
+  enc <- encode(floor)
+  clauses <- lapply(enc$clauses, as_literals, arg = "literals")
+  add_clauses(solver, clauses)
+  if (enc$top > floor) {
+    record_aux(solver, floor + 1L, enc$top)
   }
   invisible(solver)
 }
@@ -131,6 +175,27 @@ add_at_most <- function(solver, literals, k, encoding) {
 #' number that is always correct. A function returning bare clauses would
 #' make that the caller's problem, and a collision does not raise an error --
 #' it silently changes what the formula means.
+#'
+#' @section Reserve your variables first:
+#'
+#' Auxiliaries are allocated above every variable in use *so far*, so a
+#' variable you only introduce later may land on one. The solver remembers
+#' which variables are auxiliary and refuses them in [sat_add()],
+#' [sat_constrain()], assumptions, `vars` in [sat_solutions()] and these
+#' functions, rather than let the two silently merge. To avoid the error,
+#' declare your whole variable range up front with [sat_reserve()]:
+#'
+#' ```r
+#' s <- sat_solver()
+#' sat_reserve(s, 24)       # variables 1..24 are ours
+#' sat_exactly(s, 1:12, 1)  # auxiliaries now start at 25
+#' sat_exactly(s, 13:24, 1)
+#' ```
+#'
+#' A constraint is added whole or not at all: if it cannot be encoded, for
+#' instance because its auxiliaries would pass the maximum variable index,
+#' nothing is added.
+#'
 #'
 #' @section Choosing an encoding:
 #'
@@ -169,47 +234,119 @@ NULL
 
 #' @rdname cardinality
 #' @export
-sat_at_most <- function(solver, literals, k, encoding = c("auto", "pairwise",
-                                                          "sequential")) {
+sat_at_most <- function(
+  solver,
+  literals,
+  k,
+  encoding = c("auto", "pairwise", "sequential")
+) {
   literals <- check_distinct(as_literals(literals))
   encoding <- match.arg(encoding)
   k <- check_bound(k)
 
-  add_at_most(solver, literals, k, encoding)
+  add_cardinality(solver, literals, function(top) {
+    encode_at_most(literals, k, encoding, top)
+  })
 }
 
 #' @rdname cardinality
 #' @export
-sat_at_least <- function(solver, literals, k, encoding = c("auto", "pairwise",
-                                                           "sequential")) {
+sat_at_least <- function(
+  solver,
+  literals,
+  k,
+  encoding = c("auto", "pairwise", "sequential")
+) {
   literals <- check_distinct(as_literals(literals))
   encoding <- match.arg(encoding)
-  n <- length(literals)
   k <- check_bound(k)
 
-  if (k == 0L) {
-    return(invisible(solver)) # always satisfied
-  }
-  if (k > n) {
-    # impossible: add the empty clause rather than pretend otherwise
-    .Call(zusat_add_clause, solver, integer())
-    return(invisible(solver))
-  }
-  # "at least k of these are true" is "at most n-k of them are false"
-  add_at_most(solver, -literals, n - k, encoding)
+  add_cardinality(solver, literals, function(top) {
+    encode_at_least(literals, k, encoding, top)
+  })
 }
 
 #' @rdname cardinality
 #' @export
-sat_exactly <- function(solver, literals, k, encoding = c("auto", "pairwise",
-                                                          "sequential")) {
+sat_exactly <- function(
+  solver,
+  literals,
+  k,
+  encoding = c("auto", "pairwise", "sequential")
+) {
   literals <- check_distinct(as_literals(literals))
   encoding <- match.arg(encoding)
-  n <- length(literals)
   k <- check_bound(k)
 
-  sat_at_least(solver, literals, k, encoding = encoding)
-  sat_at_most(solver, literals, k, encoding = encoding)
+  # Both halves are encoded before either is added, the second allocating
+  # above the first, so a failure in the second cannot leave the first behind.
+  add_cardinality(solver, literals, function(top) {
+    lower <- encode_at_least(literals, k, encoding, top)
+    upper <- encode_at_most(literals, k, encoding, lower$top)
+    list(clauses = c(lower$clauses, upper$clauses), top = upper$top)
+  })
+}
+
+#' Reserve variable numbers before adding cardinality constraints
+#'
+#' Declares variables `1` to `n` to the solver without adding any clause, so
+#' that the auxiliary variables later cardinality constraints introduce are
+#' allocated above them. Call it with the number of variables your model
+#' uses, before the first [sat_at_most()], [sat_at_least()] or
+#' [sat_exactly()].
+#'
+#' Without it, an encoding allocates above the variables in use so far, and
+#' a variable you introduce afterwards can land on one of its auxiliaries.
+#' The package refuses such a variable rather than let the two silently
+#' merge, and that error is what this function avoids.
+#'
+#' Like adding a clause, this moves the solver out of its initial
+#' configuration state, so call [sat_trace_proof()] and set options with
+#' [sat_option()] first. It also invalidates the model of an earlier solve.
+#'
+#' @param solver A `zusat_solver`.
+#' @param n The number of variables to reserve. Reserving fewer than the
+#'   solver already knows does nothing; reserving into a range already used
+#'   for auxiliary variables is an error.
+#' @return `solver`, invisibly.
+#' @seealso [cardinality]
+#' @export
+#' @examples
+#' s <- sat_solver()
+#' sat_reserve(s, 24)
+#' sat_exactly(s, 1:12, 1)
+#' sat_exactly(s, 13:24, 1)
+#' sat_n_vars(s) # 24 of ours, then the auxiliaries
+sat_reserve <- function(solver, n) {
+  if (!is.numeric(n) || length(n) != 1L || is.na(n)) {
+    stop("`n` must be a single number", call. = FALSE)
+  }
+  if (!is.finite(n) || n != trunc(n)) {
+    stop("`n` must be a whole number", call. = FALSE)
+  }
+  if (n < 0) {
+    stop("`n` must be non-negative", call. = FALSE)
+  }
+  if (n > max_var()) {
+    stop(sprintf("`n` must be at most %d", max_var()), call. = FALSE)
+  }
+  ranges <- aux_ranges(solver)
+  clash <- which(ranges[, 1] <= n)
+  if (length(clash)) {
+    stop(
+      sprintf(
+        paste0(
+          "variables %d to %d are already auxiliary variables ",
+          "of a cardinality constraint; reserve before adding ",
+          "cardinality constraints"
+        ),
+        ranges[clash[1], 1],
+        ranges[clash[1], 2]
+      ),
+      call. = FALSE
+    )
+  }
+  .Call(zusat_reserve, solver, as.integer(n))
   invisible(solver)
 }
 
@@ -220,8 +357,14 @@ sat_exactly <- function(solver, literals, k, encoding = c("auto", "pairwise",
 check_distinct <- function(literals, arg = "literals") {
   dup <- anyDuplicated(abs(literals))
   if (dup) {
-    stop(sprintf("`%s` must not repeat a variable; variable %d appears twice",
-                 arg, abs(literals)[dup]), call. = FALSE)
+    stop(
+      sprintf(
+        "`%s` must not repeat a variable; variable %d appears twice",
+        arg,
+        abs(literals)[dup]
+      ),
+      call. = FALSE
+    )
   }
   literals
 }

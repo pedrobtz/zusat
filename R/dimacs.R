@@ -25,6 +25,7 @@
 #' read_dimacs(f)
 #' sat_solve(read_dimacs(f))
 read_dimacs <- function(path) {
+  check_path(path)
   if (!file.exists(path)) {
     stop(sprintf("no such file: %s", path), call. = FALSE)
   }
@@ -34,7 +35,11 @@ read_dimacs <- function(path) {
   # from there on is trailer, not formula.
   stop_at <- which(grepl("^[[:space:]]*%", lines))
   if (length(stop_at)) {
-    lines <- if (stop_at[1] == 1L) character() else lines[seq_len(stop_at[1] - 1L)]
+    lines <- if (stop_at[1] == 1L) {
+      character()
+    } else {
+      lines[seq_len(stop_at[1] - 1L)]
+    }
   }
 
   lines <- lines[!grepl("^[[:space:]]*[cp]", lines)]
@@ -48,25 +53,37 @@ read_dimacs <- function(path) {
     return(list())
   }
 
-  values <- suppressWarnings(as.numeric(tokens))
-  if (anyNA(values)) {
-    bad <- tokens[is.na(values)][1]
-    stop(sprintf("%s is not a DIMACS file: unexpected token '%s'",
-                 basename(path), bad), call. = FALSE)
+  # DIMACS literals are decimal integers. as.numeric() alone also accepts
+  # "0x10" and "1e3", which no DIMACS tool writes, so a corrupt file would
+  # read as a different formula rather than fail.
+  numeral <- grepl("^[-+]?[0-9]+$", tokens)
+  if (!all(numeral)) {
+    bad <- tokens[!numeral][1]
+    stop(
+      sprintf(
+        "%s is not a DIMACS file: unexpected token '%s'",
+        basename(path),
+        bad
+      ),
+      call. = FALSE
+    )
   }
-  if (any(values != trunc(values))) {
-    stop(sprintf("%s contains a non-integer literal", basename(path)),
-         call. = FALSE)
-  }
+  values <- as.numeric(tokens)
   # Range-checked before as.integer(), which would otherwise turn an oversized
   # literal into NA with only a coercion warning -- the file would appear to
   # read, and the failure would surface later from sat_add() with no mention
   # of which file or token caused it.
   if (any(!is.finite(values)) || any(abs(values) > max_var())) {
     bad <- values[!is.finite(values) | abs(values) > max_var()][1]
-    stop(sprintf("%s contains literal %s, beyond the maximum variable index %d",
-                 basename(path), format(bad, scientific = FALSE), max_var()),
-         call. = FALSE)
+    stop(
+      sprintf(
+        "%s contains literal %s, beyond the maximum variable index %d",
+        basename(path),
+        format(bad, scientific = FALSE),
+        max_var()
+      ),
+      call. = FALSE
+    )
   }
   values <- as.integer(values)
 
@@ -77,9 +94,13 @@ read_dimacs <- function(path) {
   }
   starts <- c(1L, utils::head(ends, -1L) + 1L)
 
-  clauses <- Map(function(from, to) {
-    if (to <= from) integer() else values[seq(from, to - 1L)]
-  }, starts, ends)
+  clauses <- Map(
+    function(from, to) {
+      if (to <= from) integer() else values[seq(from, to - 1L)]
+    },
+    starts,
+    ends
+  )
 
   # Drop the names Map() attaches, so the result is a plain list.
   unname(clauses)
@@ -90,7 +111,8 @@ read_dimacs <- function(path) {
 #' @param x A list of clauses, as accepted by [sat_add()].
 #' @param path Path to write to.
 #' @param comment Optional character vector written as `c` comment lines at
-#'   the top of the file.
+#'   the top of the file. An element containing line breaks becomes several
+#'   comment lines, so a comment can never be read back as formula.
 #' @return `path`, invisibly.
 #' @seealso [read_dimacs()]
 #' @export
@@ -99,22 +121,50 @@ read_dimacs <- function(path) {
 #' write_dimacs(list(c(1, 2), c(-1, 3)), f, comment = "an example")
 #' cat(readLines(f), sep = "\n")
 write_dimacs <- function(x, path, comment = NULL) {
-  if (!is.list(x)) {
-    stop("`x` must be a list of clauses", call. = FALSE)
+  check_formula(x, "a list of clauses")
+  check_path(path)
+  if (!is.null(comment)) {
+    if (!is.character(comment) || anyNA(comment)) {
+      stop("`comment` must be a character vector without NA", call. = FALSE)
+    }
+    comment <- unlist(lapply(strsplit(comment, "\r\n|\r|\n"), function(z) {
+      if (length(z)) z else ""
+    }))
   }
-  clauses <- lapply(x, as_literals, arg = "clauses")
+  clauses <- as_clauses(x)
 
-  n_vars <- if (length(clauses)) max(0L, vapply(clauses, function(cl) {
-    if (length(cl)) max(abs(cl)) else 0L
-  }, integer(1))) else 0L
+  n_vars <- if (length(clauses)) {
+    max(
+      0L,
+      vapply(
+        clauses,
+        function(cl) {
+          if (length(cl)) max(abs(cl)) else 0L
+        },
+        integer(1)
+      )
+    )
+  } else {
+    0L
+  }
 
   header <- c(
     if (!is.null(comment)) paste("c", comment),
     sprintf("p cnf %d %d", n_vars, length(clauses))
   )
-  body <- vapply(clauses, function(cl) paste(c(cl, 0L), collapse = " "),
-                 character(1))
+  body <- vapply(
+    clauses,
+    function(cl) paste(c(cl, 0L), collapse = " "),
+    character(1)
+  )
 
   writeLines(c(header, body), path)
+  invisible(path)
+}
+
+check_path <- function(path) {
+  if (!is.character(path) || length(path) != 1L || is.na(path)) {
+    stop("`path` must be a single file path", call. = FALSE)
+  }
   invisible(path)
 }

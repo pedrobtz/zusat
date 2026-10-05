@@ -27,6 +27,7 @@ reference:
     most real models are built from.
   contents:
   - cardinality
+  - sat_reserve
 
 - title: Steering the search
   desc: >

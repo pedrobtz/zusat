@@ -81,7 +81,7 @@ test_that("malformed input is rejected with the offending token", {
   expect_error(read_dimacs(path), "banana")
 
   fractional <- write_lines_to_temp("p cnf 2 1", "1 2.5 0")
-  expect_error(read_dimacs(fractional), "non-integer")
+  expect_error(read_dimacs(fractional), "unexpected token '2.5'")
 })
 
 test_that("a missing file is an error, not an empty formula", {

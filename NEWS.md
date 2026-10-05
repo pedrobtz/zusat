@@ -14,6 +14,7 @@
   literals proved at the root; `sat_simplify()` runs inprocessing alone.
 * `sat_at_most()`, `sat_at_least()` and `sat_exactly()` encode cardinality
   constraints, choosing between a pairwise and a sequential-counter encoding
-  automatically.
+  automatically. `sat_reserve()` claims the caller's variable range first,
+  and auxiliary variables are refused wherever a user variable is expected.
 * `sat_trace_proof()` and `sat_close_proof()` record a DRAT or LRAT proof of
   unsatisfiability, checkable by external tools such as `drat-trim`.
