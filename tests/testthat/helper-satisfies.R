@@ -10,9 +10,13 @@
 # polarity extends the model, so the caller may pick freely.
 satisfies_all <- function(formula, m) {
   m[is.na(m)] <- TRUE
-  satisfied <- vapply(formula, function(clause) {
-    values <- m[as.character(abs(clause))]
-    any(ifelse(clause > 0, values, !values))
-  }, logical(1))
+  satisfied <- vapply(
+    formula,
+    function(clause) {
+      values <- m[as.character(abs(clause))]
+      any(ifelse(clause > 0, values, !values))
+    },
+    logical(1)
+  )
   all(satisfied)
 }

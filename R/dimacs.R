@@ -34,7 +34,11 @@ read_dimacs <- function(path) {
   # from there on is trailer, not formula.
   stop_at <- which(grepl("^[[:space:]]*%", lines))
   if (length(stop_at)) {
-    lines <- if (stop_at[1] == 1L) character() else lines[seq_len(stop_at[1] - 1L)]
+    lines <- if (stop_at[1] == 1L) {
+      character()
+    } else {
+      lines[seq_len(stop_at[1] - 1L)]
+    }
   }
 
   lines <- lines[!grepl("^[[:space:]]*[cp]", lines)]
@@ -51,12 +55,20 @@ read_dimacs <- function(path) {
   values <- suppressWarnings(as.numeric(tokens))
   if (anyNA(values)) {
     bad <- tokens[is.na(values)][1]
-    stop(sprintf("%s is not a DIMACS file: unexpected token '%s'",
-                 basename(path), bad), call. = FALSE)
+    stop(
+      sprintf(
+        "%s is not a DIMACS file: unexpected token '%s'",
+        basename(path),
+        bad
+      ),
+      call. = FALSE
+    )
   }
   if (any(values != trunc(values))) {
-    stop(sprintf("%s contains a non-integer literal", basename(path)),
-         call. = FALSE)
+    stop(
+      sprintf("%s contains a non-integer literal", basename(path)),
+      call. = FALSE
+    )
   }
   # Range-checked before as.integer(), which would otherwise turn an oversized
   # literal into NA with only a coercion warning -- the file would appear to
@@ -64,9 +76,15 @@ read_dimacs <- function(path) {
   # of which file or token caused it.
   if (any(!is.finite(values)) || any(abs(values) > max_var())) {
     bad <- values[!is.finite(values) | abs(values) > max_var()][1]
-    stop(sprintf("%s contains literal %s, beyond the maximum variable index %d",
-                 basename(path), format(bad, scientific = FALSE), max_var()),
-         call. = FALSE)
+    stop(
+      sprintf(
+        "%s contains literal %s, beyond the maximum variable index %d",
+        basename(path),
+        format(bad, scientific = FALSE),
+        max_var()
+      ),
+      call. = FALSE
+    )
   }
   values <- as.integer(values)
 
@@ -77,9 +95,13 @@ read_dimacs <- function(path) {
   }
   starts <- c(1L, utils::head(ends, -1L) + 1L)
 
-  clauses <- Map(function(from, to) {
-    if (to <= from) integer() else values[seq(from, to - 1L)]
-  }, starts, ends)
+  clauses <- Map(
+    function(from, to) {
+      if (to <= from) integer() else values[seq(from, to - 1L)]
+    },
+    starts,
+    ends
+  )
 
   # Drop the names Map() attaches, so the result is a plain list.
   unname(clauses)
@@ -104,16 +126,30 @@ write_dimacs <- function(x, path, comment = NULL) {
   }
   clauses <- lapply(x, as_literals, arg = "clauses")
 
-  n_vars <- if (length(clauses)) max(0L, vapply(clauses, function(cl) {
-    if (length(cl)) max(abs(cl)) else 0L
-  }, integer(1))) else 0L
+  n_vars <- if (length(clauses)) {
+    max(
+      0L,
+      vapply(
+        clauses,
+        function(cl) {
+          if (length(cl)) max(abs(cl)) else 0L
+        },
+        integer(1)
+      )
+    )
+  } else {
+    0L
+  }
 
   header <- c(
     if (!is.null(comment)) paste("c", comment),
     sprintf("p cnf %d %d", n_vars, length(clauses))
   )
-  body <- vapply(clauses, function(cl) paste(c(cl, 0L), collapse = " "),
-                 character(1))
+  body <- vapply(
+    clauses,
+    function(cl) paste(c(cl, 0L), collapse = " "),
+    character(1)
+  )
 
   writeLines(c(header, body), path)
   invisible(path)

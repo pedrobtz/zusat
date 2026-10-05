@@ -39,20 +39,35 @@
 #'
 #' # project onto variable 1: only two distinct answers remain
 #' sat_n_solutions(sat_solutions(list(c(1, 2)), vars = 1))
-sat_solutions <- function(x, limit = 1000, vars = NULL,
-                          assumptions = integer(), ...) {
+sat_solutions <- function(
+  x,
+  limit = 1000,
+  vars = NULL,
+  assumptions = integer(),
+  ...
+) {
   UseMethod("sat_solutions")
 }
 
 #' @rdname sat_solutions
 #' @export
-sat_solutions.default <- function(x, limit = 1000, vars = NULL,
-                                  assumptions = integer(), ...) {
+sat_solutions.default <- function(
+  x,
+  limit = 1000,
+  vars = NULL,
+  assumptions = integer(),
+  ...
+) {
   if (!is.list(x)) {
     stop("`x` must be a list of clauses or a zusat_solver", call. = FALSE)
   }
-  sat_solutions(sat_solver(x), limit = limit, vars = vars,
-                assumptions = assumptions, ...)
+  sat_solutions(
+    sat_solver(x),
+    limit = limit,
+    vars = vars,
+    assumptions = assumptions,
+    ...
+  )
 }
 
 #' @rdname sat_solutions
@@ -63,8 +78,13 @@ sat_solutions.default <- function(x, limit = 1000, vars = NULL,
 #' out every model found. That is occasionally what you want and usually not,
 #' so pass the formula instead when the solver is still needed.
 #' @export
-sat_solutions.zusat_solver <- function(x, limit = 1000, vars = NULL,
-                                       assumptions = integer(), ...) {
+sat_solutions.zusat_solver <- function(
+  x,
+  limit = 1000,
+  vars = NULL,
+  assumptions = integer(),
+  ...
+) {
   if (!is.numeric(limit) || length(limit) != 1L || is.na(limit) || limit < 0) {
     stop("`limit` must be a single non-negative number", call. = FALSE)
   }
@@ -89,7 +109,9 @@ sat_solutions.zusat_solver <- function(x, limit = 1000, vars = NULL,
     if (!sat_is_sat(sol)) {
       # The first solve decides the status; a later one going unsat just
       # means the models ran out.
-      if (length(found) == 0L) status <- sat_status(sol)
+      if (length(found) == 0L) {
+        status <- sat_status(sol)
+      }
       break
     }
     status <- "sat"
@@ -122,8 +144,12 @@ sat_solutions.zusat_solver <- function(x, limit = 1000, vars = NULL,
     complete <- FALSE
   }
 
-  new_solutions(found, vars_used = if (length(found)) this_vars else integer(),
-                status = status, complete = complete)
+  new_solutions(
+    found,
+    vars_used = if (length(found)) this_vars else integer(),
+    status = status,
+    complete = complete
+  )
 }
 
 #' The result of an enumeration
@@ -159,22 +185,25 @@ NULL
 
 new_solutions <- function(found, vars_used, status, complete) {
   if (length(found) == 0L) {
-    out <- data.frame(solution = integer(), variable = integer(),
-                      value = logical())
+    out <- data.frame(
+      solution = integer(),
+      variable = integer(),
+      value = logical()
+    )
   } else {
     n <- length(vars_used)
     out <- data.frame(
       solution = rep(seq_along(found), each = n),
       variable = rep(as.integer(vars_used), times = length(found)),
-      value    = unlist(found, use.names = FALSE)
+      value = unlist(found, use.names = FALSE)
     )
   }
   structure(
     out,
-    class         = c("zusat_solutions", "data.frame"),
-    status        = status,
-    n_solutions   = length(found),
-    complete      = complete
+    class = c("zusat_solutions", "data.frame"),
+    status = status,
+    n_solutions = length(found),
+    complete = complete
   )
 }
 

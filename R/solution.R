@@ -54,11 +54,11 @@ new_solution <- function(status, solver, elapsed) {
   out <- data.frame(variable = as.integer(variable), value = value)
   structure(
     out,
-    class      = c("zusat_solution", "data.frame"),
-    status     = status,
-    n_vars     = sat_n_vars(solver),
-    n_clauses  = sat_n_clauses(solver),
-    elapsed    = elapsed
+    class = c("zusat_solution", "data.frame"),
+    status = status,
+    n_vars = sat_n_vars(solver),
+    n_clauses = sat_n_clauses(solver),
+    elapsed = elapsed
   )
 }
 
@@ -109,7 +109,8 @@ format.zusat_solution <- function(x, ...) {
   sprintf(
     "<zusat_solution> %s  (%d variable%s, %s active clause%s, %.3fs)",
     status,
-    n_vars, if (n_vars == 1L) "" else "s",
+    n_vars,
+    if (n_vars == 1L) "" else "s",
     format(attr(x, "n_clauses", exact = TRUE)),
     if (isTRUE(attr(x, "n_clauses", exact = TRUE) == 1)) "" else "s",
     attr(x, "elapsed", exact = TRUE)

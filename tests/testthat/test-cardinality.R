@@ -12,7 +12,9 @@
 # Every assignment of n booleans whose true-count satisfies the predicate.
 expected_assignments <- function(n, keep) {
   grid <- expand.grid(rep(list(c(FALSE, TRUE)), n), KEEP.OUT.ATTRS = FALSE)
-  rows <- lapply(seq_len(nrow(grid)), function(i) unlist(grid[i, ], use.names = FALSE))
+  rows <- lapply(seq_len(nrow(grid)), function(i) {
+    unlist(grid[i, ], use.names = FALSE)
+  })
   Filter(function(a) keep(sum(a)), rows)
 }
 
@@ -30,21 +32,27 @@ admitted_assignments <- function(build, n) {
 as_key <- function(assignments) {
   # unname: split() names its groups, and those names would otherwise be
   # compared against the unnamed expected set and fail for the wrong reason
-  sort(unname(vapply(assignments, function(a) {
-    paste(as.integer(a), collapse = "")
-  }, character(1))))
+  sort(unname(vapply(
+    assignments,
+    function(a) {
+      paste(as.integer(a), collapse = "")
+    },
+    character(1)
+  )))
 }
 
 expect_encodes_exactly <- function(n, k, kind, encoding) {
-  keep <- switch(kind,
-    at_most  = function(count) count <= k,
+  keep <- switch(
+    kind,
+    at_most = function(count) count <= k,
     at_least = function(count) count >= k,
-    exactly  = function(count) count == k
+    exactly = function(count) count == k
   )
-  build <- switch(kind,
-    at_most  = function(s) sat_at_most(s, seq_len(n), k, encoding = encoding),
+  build <- switch(
+    kind,
+    at_most = function(s) sat_at_most(s, seq_len(n), k, encoding = encoding),
     at_least = function(s) sat_at_least(s, seq_len(n), k, encoding = encoding),
-    exactly  = function(s) sat_exactly(s, seq_len(n), k, encoding = encoding)
+    exactly = function(s) sat_exactly(s, seq_len(n), k, encoding = encoding)
   )
 
   testthat::expect_equal(
@@ -103,10 +111,16 @@ test_that("auxiliary variables do not collide with the literals", {
   expect_gt(sat_n_vars(s), 6L) # auxiliaries live above the literals
 
   sols <- sat_solutions(s, vars = 1:6, limit = Inf)
-  counts <- vapply(split(sols, sols$solution), function(one) sum(one$value),
-                   numeric(1))
+  counts <- vapply(
+    split(sols, sols$solution),
+    function(one) sum(one$value),
+    numeric(1)
+  )
   expect_true(all(counts <= 2))
-  expect_equal(sat_n_solutions(sols), length(expected_assignments(6, function(c) c <= 2)))
+  expect_equal(
+    sat_n_solutions(sols),
+    length(expected_assignments(6, function(c) c <= 2))
+  )
 })
 
 test_that("auxiliary variables clear existing formula variables too", {
@@ -114,8 +128,11 @@ test_that("auxiliary variables clear existing formula variables too", {
   sat_at_most(s, 1:6, 2, encoding = "sequential")
 
   sols <- sat_solutions(s, vars = 1:6, limit = Inf)
-  counts <- vapply(split(sols, sols$solution), function(one) sum(one$value),
-                   numeric(1))
+  counts <- vapply(
+    split(sols, sols$solution),
+    function(one) sum(one$value),
+    numeric(1)
+  )
   expect_true(all(counts <= 2))
 })
 
@@ -125,8 +142,11 @@ test_that("negative literals are constrained, not their variables", {
   sat_at_most(s, c(-1, -2), 1)
 
   sols <- sat_solutions(s, vars = 1:2, limit = Inf)
-  false_counts <- vapply(split(sols, sols$solution),
-                         function(one) sum(!one$value), numeric(1))
+  false_counts <- vapply(
+    split(sols, sols$solution),
+    function(one) sum(!one$value),
+    numeric(1)
+  )
   expect_true(all(false_counts <= 1))
   expect_equal(sat_n_solutions(sols), 3L)
 })
@@ -174,8 +194,11 @@ test_that("exactly one is the pick-a-bucket constraint", {
 
   sols <- sat_solutions(s, vars = 1:4, limit = Inf)
   expect_equal(sat_n_solutions(sols), 4L)
-  counts <- vapply(split(sols, sols$solution), function(one) sum(one$value),
-                   numeric(1))
+  counts <- vapply(
+    split(sols, sols$solution),
+    function(one) sum(one$value),
+    numeric(1)
+  )
   expect_true(all(counts == 1))
 })
 

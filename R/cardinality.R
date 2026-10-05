@@ -46,7 +46,9 @@ encode_sequential <- function(literals, k, top) {
 
   add(-literals[1], s(1, 1))
   if (k > 1L) {
-    for (j in 2:k) add(-s(1, j))
+    for (j in 2:k) {
+      add(-s(1, j))
+    }
   }
 
   if (n > 2L) {
@@ -88,7 +90,9 @@ add_at_most <- function(solver, literals, k, encoding) {
     return(invisible(solver)) # nothing to forbid
   }
   if (k == 0L) {
-    for (l in literals) .Call(zusat_add_clause, solver, as_literals(-l))
+    for (l in literals) {
+      .Call(zusat_add_clause, solver, as_literals(-l))
+    }
     return(invisible(solver))
   }
 
@@ -169,8 +173,12 @@ NULL
 
 #' @rdname cardinality
 #' @export
-sat_at_most <- function(solver, literals, k, encoding = c("auto", "pairwise",
-                                                          "sequential")) {
+sat_at_most <- function(
+  solver,
+  literals,
+  k,
+  encoding = c("auto", "pairwise", "sequential")
+) {
   literals <- check_distinct(as_literals(literals))
   encoding <- match.arg(encoding)
   k <- check_bound(k)
@@ -180,8 +188,12 @@ sat_at_most <- function(solver, literals, k, encoding = c("auto", "pairwise",
 
 #' @rdname cardinality
 #' @export
-sat_at_least <- function(solver, literals, k, encoding = c("auto", "pairwise",
-                                                           "sequential")) {
+sat_at_least <- function(
+  solver,
+  literals,
+  k,
+  encoding = c("auto", "pairwise", "sequential")
+) {
   literals <- check_distinct(as_literals(literals))
   encoding <- match.arg(encoding)
   n <- length(literals)
@@ -201,8 +213,12 @@ sat_at_least <- function(solver, literals, k, encoding = c("auto", "pairwise",
 
 #' @rdname cardinality
 #' @export
-sat_exactly <- function(solver, literals, k, encoding = c("auto", "pairwise",
-                                                          "sequential")) {
+sat_exactly <- function(
+  solver,
+  literals,
+  k,
+  encoding = c("auto", "pairwise", "sequential")
+) {
   literals <- check_distinct(as_literals(literals))
   encoding <- match.arg(encoding)
   n <- length(literals)
@@ -220,8 +236,14 @@ sat_exactly <- function(solver, literals, k, encoding = c("auto", "pairwise",
 check_distinct <- function(literals, arg = "literals") {
   dup <- anyDuplicated(abs(literals))
   if (dup) {
-    stop(sprintf("`%s` must not repeat a variable; variable %d appears twice",
-                 arg, abs(literals)[dup]), call. = FALSE)
+    stop(
+      sprintf(
+        "`%s` must not repeat a variable; variable %d appears twice",
+        arg,
+        abs(literals)[dup]
+      ),
+      call. = FALSE
+    )
   }
   literals
 }

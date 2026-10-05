@@ -70,8 +70,12 @@
 #'
 #' # the proof ends with the empty clause, written as a bare "0"
 #' tail(readLines(path), 1)
-sat_trace_proof <- function(solver, path, format = c("drat", "lrat"),
-                            binary = FALSE) {
+sat_trace_proof <- function(
+  solver,
+  path,
+  format = c("drat", "lrat"),
+  binary = FALSE
+) {
   format <- match.arg(format)
   if (!is.character(path) || length(path) != 1L || is.na(path)) {
     stop("`path` must be a single file path", call. = FALSE)
@@ -84,8 +88,11 @@ sat_trace_proof <- function(solver, path, format = c("drat", "lrat"),
   # solver out of CONFIGURING, so the count-based test let that case through
   # to CaDiCaL -- which aborted, and leaked the file this function had opened.
   if (!.Call(zusat_configuring, solver)) {
-    stop("start tracing before adding clauses or solving: CaDiCaL can only ",
-         "trace a complete proof from a freshly created solver", call. = FALSE)
+    stop(
+      "start tracing before adding clauses or solving: CaDiCaL can only ",
+      "trace a complete proof from a freshly created solver",
+      call. = FALSE
+    )
   }
 
   # Format and encoding are options, and like tracing itself they have to be

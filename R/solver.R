@@ -26,7 +26,10 @@ as_literals <- function(x, arg = "literals") {
     return(integer())
   }
   if (!is.numeric(x) || is.factor(x)) {
-    stop(sprintf("`%s` must be numeric, not %s", arg, class(x)[1]), call. = FALSE)
+    stop(
+      sprintf("`%s` must be numeric, not %s", arg, class(x)[1]),
+      call. = FALSE
+    )
   }
   if (anyNA(x)) {
     # is.na() is TRUE for NaN as well as NA
@@ -39,15 +42,28 @@ as_literals <- function(x, arg = "literals") {
     stop(sprintf("`%s` must be whole numbers", arg), call. = FALSE)
   }
   if (any(abs(x) > max_var())) {
-    stop(sprintf(paste0("`%s` must be at most %d in absolute value: CaDiCaL ",
-                        "allocates one slot per variable up to the largest ",
-                        "index used, so a larger one exhausts memory"),
-                 arg, max_var()), call. = FALSE)
+    stop(
+      sprintf(
+        paste0(
+          "`%s` must be at most %d in absolute value: CaDiCaL ",
+          "allocates one slot per variable up to the largest ",
+          "index used, so a larger one exhausts memory"
+        ),
+        arg,
+        max_var()
+      ),
+      call. = FALSE
+    )
   }
   x <- as.integer(x)
   if (any(x == 0L)) {
-    stop(sprintf("`%s` must not contain 0; clauses are terminated automatically", arg),
-         call. = FALSE)
+    stop(
+      sprintf(
+        "`%s` must not contain 0; clauses are terminated automatically",
+        arg
+      ),
+      call. = FALSE
+    )
   }
   x
 }
@@ -62,8 +78,10 @@ as_literals <- function(x, arg = "literals") {
 as_variables <- function(x, arg = "vars") {
   v <- as_literals(x, arg)
   if (any(v < 0L)) {
-    stop(sprintf("`%s` must be variable numbers, not negative literals", arg),
-         call. = FALSE)
+    stop(
+      sprintf("`%s` must be variable numbers, not negative literals", arg),
+      call. = FALSE
+    )
   }
   v
 }
@@ -172,9 +190,9 @@ sat_solve.zusat_solver <- function(x, assumptions = integer(), ...) {
   elapsed <- proc.time()[["elapsed"]] - started
 
   new_solution(
-    status    = status,
-    solver    = x,
-    elapsed   = elapsed
+    status = status,
+    solver = x,
+    elapsed = elapsed
   )
 }
 
@@ -289,11 +307,20 @@ sat_option <- function(solver, name, value) {
   # configured -- everything except these four, which affect reporting only.
   # Without this the caller gets a contract violation reported against
   # CaDiCaL's own function and file names.
-  if (!name %in% c("log", "quiet", "report", "verbose") &&
-      !.Call(zusat_configuring, solver)) {
-    stop(sprintf(paste0("option '%s' can only be set on a freshly created ",
-                        "solver, before any clause is added or solved"), name),
-         call. = FALSE)
+  if (
+    !name %in% c("log", "quiet", "report", "verbose") &&
+      !.Call(zusat_configuring, solver)
+  ) {
+    stop(
+      sprintf(
+        paste0(
+          "option '%s' can only be set on a freshly created ",
+          "solver, before any clause is added or solved"
+        ),
+        name
+      ),
+      call. = FALSE
+    )
   }
   .Call(zusat_set_option, solver, name, as.integer(value))
   invisible(value)

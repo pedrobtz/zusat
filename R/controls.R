@@ -2,8 +2,14 @@
 # discards the flag saying whether a name was recognised, so an unknown one is
 # silently ignored -- and a solve you believed was bounded runs to completion.
 # Checking here is the only place the mistake can be caught.
-sat_limits <- c("conflicts", "decisions", "preprocessing", "localsearch",
-                "ticks", "terminate")
+sat_limits <- c(
+  "conflicts",
+  "decisions",
+  "preprocessing",
+  "localsearch",
+  "ticks",
+  "terminate"
+)
 
 #' Bound how hard a solve may work
 #'
@@ -38,9 +44,14 @@ sat_limit <- function(solver, name, value) {
     stop("`name` must be a single limit name", call. = FALSE)
   }
   if (!name %in% sat_limits) {
-    stop(sprintf("unknown limit '%s'; must be one of %s", name,
-                 paste(sprintf("'%s'", sat_limits), collapse = ", ")),
-         call. = FALSE)
+    stop(
+      sprintf(
+        "unknown limit '%s'; must be one of %s",
+        name,
+        paste(sprintf("'%s'", sat_limits), collapse = ", ")
+      ),
+      call. = FALSE
+    )
   }
   if (!is.numeric(value) || length(value) != 1L || is.na(value)) {
     stop("`value` must be a single number", call. = FALSE)

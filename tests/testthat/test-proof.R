@@ -108,8 +108,10 @@ test_that("closing twice is an error rather than a silent no-op", {
 
 test_that("an unwritable path fails loudly", {
   s <- sat_solver()
-  expect_error(sat_trace_proof(s, file.path(tempfile(), "nope.drat")),
-               "could not open")
+  expect_error(
+    sat_trace_proof(s, file.path(tempfile(), "nope.drat")),
+    "could not open"
+  )
   # and the solver is left usable, not half-configured
   expect_false(sat_is_tracing(s))
   sat_add(s, list(c(1, 2)))
@@ -150,9 +152,13 @@ test_that("a binary proof decodes to the same steps as the text one", {
 
   decoded <- decode_binary_drat(binary_path) # errors on a malformed stream
   expect_equal(decoded, parse_text_drat(text_path))
-  expect_true(any(vapply(decoded, function(step) {
-    step$kind == "a" && length(step$literals) == 0L
-  }, logical(1)))) # the empty clause was derived
+  expect_true(any(vapply(
+    decoded,
+    function(step) {
+      step$kind == "a" && length(step$literals) == 0L
+    },
+    logical(1)
+  ))) # the empty clause was derived
 })
 
 test_that("newline translation would be detected if it happened", {
@@ -170,11 +176,15 @@ test_that("newline translation would be detected if it happened", {
   clean <- decode_binary_drat(path)
 
   corrupted_path <- tempfile(fileext = ".drat")
-  writeBin(simulate_crlf_translation(readBin(path, "raw", file.size(path))),
-           corrupted_path)
+  writeBin(
+    simulate_crlf_translation(readBin(path, "raw", file.size(path))),
+    corrupted_path
+  )
 
-  corrupted <- tryCatch(decode_binary_drat(corrupted_path),
-                        error = function(e) NULL)
+  corrupted <- tryCatch(
+    decode_binary_drat(corrupted_path),
+    error = function(e) NULL
+  )
   expect_false(identical(corrupted, clean))
 })
 
@@ -218,7 +228,9 @@ test_that("drat-trim verifies a real refutation", {
 
   # pigeonhole 6 into 5: small, and genuinely requires a derivation
   v <- function(i, j) (i - 1L) * 5L + j
-  clauses <- lapply(1:6, function(i) vapply(1:5, function(j) v(i, j), numeric(1)))
+  clauses <- lapply(1:6, function(i) {
+    vapply(1:5, function(j) v(i, j), numeric(1))
+  })
   for (j in 1:5) {
     for (pair in utils::combn(6, 2, simplify = FALSE)) {
       clauses <- c(clauses, list(c(-v(pair[1], j), -v(pair[2], j))))
@@ -235,7 +247,11 @@ test_that("drat-trim verifies a real refutation", {
   expect_equal(sat_status(sat_solve(s)), "unsat")
   sat_close_proof(s)
 
-  out <- suppressWarnings(system2(checker, c(cnf, proof), stdout = TRUE,
-                                  stderr = TRUE))
+  out <- suppressWarnings(system2(
+    checker,
+    c(cnf, proof),
+    stdout = TRUE,
+    stderr = TRUE
+  ))
   expect_true(any(grepl("^s VERIFIED", out)))
 })

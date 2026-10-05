@@ -112,7 +112,10 @@ test_that("tracing is refused after a solve, not only after a clause", {
   # leaves at 0 -- so this reached CaDiCaL and leaked the open file
   s <- sat_solver()
   sat_solve(s)
-  expect_error(sat_trace_proof(s, tempfile()), "before adding clauses or solving")
+  expect_error(
+    sat_trace_proof(s, tempfile()),
+    "before adding clauses or solving"
+  )
 })
 
 test_that("a refused trace leaves the solver usable and unTraced", {
@@ -269,6 +272,8 @@ test_that("simplify reports its own status and leaves the formula intact", {
 
 test_that("a solver survives many solves without leaking the terminator", {
   s <- sat_solver(list(c(1, 2)))
-  for (i in 1:20) sat_solve(s, assumptions = if (i %% 2) 1 else -1)
+  for (i in 1:20) {
+    sat_solve(s, assumptions = if (i %% 2) 1 else -1)
+  }
   expect_true(sat_is_sat(sat_solve(s)))
 })

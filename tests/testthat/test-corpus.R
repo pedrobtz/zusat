@@ -35,8 +35,13 @@ test_that("the vendored corpus is present and self-consistent", {
   expect_true(all(file.exists(files)))
 
   # every .cnf shipped should have a declared outcome, or it is dead weight
-  shipped <- sub("[.]cnf$", "", basename(
-    list.files(corpus_dir(), pattern = "[.]cnf$")))
+  shipped <- sub(
+    "[.]cnf$",
+    "",
+    basename(
+      list.files(corpus_dir(), pattern = "[.]cnf$")
+    )
+  )
   expect_setequal(shipped, expected$name)
 })
 
@@ -74,14 +79,20 @@ test_that("every satisfiable corpus instance yields a model that checks out", {
   for (name in sat_names) {
     clauses <- read_dimacs(file.path(corpus_dir(), paste0(name, ".cnf")))
     # the empty formula is satisfiable and has nothing to check
-    if (length(clauses) == 0L) next
+    if (length(clauses) == 0L) {
+      next
+    }
 
     sol <- sat_solve(clauses)
     expect_true(sat_is_sat(sol))
 
     m <- sat_assignment(sol)
-    if (length(m) == 0L) next
-    expect_true(satisfies_all(clauses, m),
-                info = sprintf("model does not satisfy %s", name))
+    if (length(m) == 0L) {
+      next
+    }
+    expect_true(
+      satisfies_all(clauses, m),
+      info = sprintf("model does not satisfy %s", name)
+    )
   }
 })
