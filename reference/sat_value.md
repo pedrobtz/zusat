@@ -20,14 +20,23 @@ sat_value(solver, vars = seq_len(sat_n_vars(solver)))
 - vars:
 
   Numeric vector of variable indices. Defaults to every variable the
-  solver knows about.
+  solver knows about. The model is invalidated by anything that changes
+  the formula or the next solve –
+  [`sat_add()`](https://pedrobtz.github.io/zusat/reference/sat_add.md),
+  [`sat_constrain()`](https://pedrobtz.github.io/zusat/reference/sat_constrain.md),
+  [`sat_reserve()`](https://pedrobtz.github.io/zusat/reference/sat_reserve.md)
+  – so read it before making such a call, or solve again.
 
 ## Value
 
-A logical vector the same length as `vars`. `NA` marks a variable
-carrying no value in this model: either the solver left it unassigned
-because both polarities extend the model, or the formula never mentions
-it at all.
+A logical vector the same length as `vars`. Every variable up to
+[`sat_n_vars()`](https://pedrobtz.github.io/zusat/reference/sat_n_vars.md)
+has a value, including one the formula never constrains (either value
+would do, and the solver picks one). `NA` marks a variable above
+[`sat_n_vars()`](https://pedrobtz.github.io/zusat/reference/sat_n_vars.md),
+which the solver has never seen. To learn which variables are forced
+rather than merely chosen, see
+[`sat_fixed()`](https://pedrobtz.github.io/zusat/reference/sat_fixed.md).
 
 ## Examples
 

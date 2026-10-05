@@ -68,7 +68,7 @@ and is roughly proportional to work done.</p></dd>
 
 
 <dt id="arg-value">value<a class="anchor" aria-label="anchor" href="#arg-value"></a></dt>
-<dd><p>Maximum for that measure. A negative value means no limit.</p></dd>
+<dd><p>Maximum for that measure; see the Values section.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -87,6 +87,21 @@ unacceptable: inside a loop, a Shiny app, or a scheduled job.</p>
 
 <p>Like assumptions, limits are consumed by the next <code><a href="sat_solve.html">sat_solve()</a></code> and are not
 retained afterwards. Set them again before each call.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="values">Values<a class="anchor" aria-label="anchor" href="#values"></a></h2>
+
+
+
+<p><code>"conflicts"</code>, <code>"decisions"</code> and <code>"ticks"</code> bound a count of work: <code>0</code>
+allows none, and <code>Inf</code> or any negative value removes the bound.
+<code>"preprocessing"</code> and <code>"localsearch"</code> instead request a number of rounds,
+<code>0</code> by default; they take a non-negative whole number, since CaDiCaL
+ignores a negative one. <code>"terminate"</code> counts how often the solver polls
+for termination; upstream reserves it for testing and debugging, and
+<code>0</code>, <code>Inf</code> or a negative value leaves it unbounded.</p>
+<p>Values must be whole numbers no larger than <code>.Machine$integer.max</code>; they
+are checked rather than coerced, so <code>1.5</code> or <code>2^31</code> is an error.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

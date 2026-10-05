@@ -12,8 +12,10 @@ one row per variable and columns:
 
 - value:
 
-  logical, its value in the model. `NA` marks a variable the solver left
-  unassigned because either polarity extends the model.
+  logical, its value in the model. Every variable the solver knows has
+  one, including a variable no clause constrains; use
+  [`sat_fixed()`](https://pedrobtz.github.io/zusat/reference/sat_fixed.md)
+  to tell a forced value from a chosen one.
 
 The outcome is carried as an attribute rather than a column, so the
 object stays type-stable: an unsatisfiable result is the same data frame
@@ -32,6 +34,13 @@ satisfiable formula with no variables also has zero rows.
 
 `status` (one of `"sat"`, `"unsat"`, `"unknown"`), `n_vars`, `n_clauses`
 and `elapsed` seconds. Prefer the accessors over reading these directly.
+
+## Subsetting
+
+Filtering or reordering rows keeps the class, and the attributes go on
+describing the solve that produced the object. Selecting columns gives a
+plain data frame, since the result no longer has the shape the class
+promises.
 
 ## See also
 

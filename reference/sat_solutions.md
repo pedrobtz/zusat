@@ -8,13 +8,34 @@ is why this is much cheaper than solving from scratch each time.
 ## Usage
 
 ``` r
-sat_solutions(x, limit = 1000, vars = NULL, assumptions = integer(), ...)
+sat_solutions(
+  x,
+  limit = 1000,
+  vars = NULL,
+  assumptions = integer(),
+  constraint = NULL,
+  ...
+)
 
 # Default S3 method
-sat_solutions(x, limit = 1000, vars = NULL, assumptions = integer(), ...)
+sat_solutions(
+  x,
+  limit = 1000,
+  vars = NULL,
+  assumptions = integer(),
+  constraint = NULL,
+  ...
+)
 
 # S3 method for class 'zusat_solver'
-sat_solutions(x, limit = 1000, vars = NULL, assumptions = integer(), ...)
+sat_solutions(
+  x,
+  limit = 1000,
+  vars = NULL,
+  assumptions = integer(),
+  constraint = NULL,
+  ...
+)
 ```
 
 ## Arguments
@@ -38,6 +59,17 @@ sat_solutions(x, limit = 1000, vars = NULL, assumptions = integer(), ...)
 
   Literals assumed true for every solve in the enumeration.
 
+- constraint:
+
+  Optional clause, as for
+  [`sat_constrain()`](https://pedrobtz.github.io/zusat/reference/sat_constrain.md),
+  that every model must satisfy. It is applied to each solve of the
+  enumeration and is not retained afterwards. A constraint already set
+  on the solver with
+  [`sat_constrain()`](https://pedrobtz.github.io/zusat/reference/sat_constrain.md)
+  would cover only the first solve, so enumerating while one is pending
+  is an error.
+
 - ...:
 
   Passed to methods.
@@ -49,7 +81,8 @@ A
 object: a data frame with one row per variable per solution, with
 columns `solution`, `variable` and `value`. Use
 [`sat_complete()`](https://pedrobtz.github.io/zusat/reference/sat_n_solutions.md)
-to tell an exhausted enumeration from one that stopped at `limit`.
+to tell an exhausted enumeration from one that stopped at `limit` or
+whose search gave up.
 
 ## Projecting onto the variables you care about
 

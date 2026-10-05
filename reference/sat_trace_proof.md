@@ -67,6 +67,34 @@ returns. CaDiCaL buffers its output, so reading the file before then
 gives a truncated proof that most checkers will reject. If a solver is
 garbage collected while still tracing, the file is closed then instead.
 
+## What the proof proves
+
+A DRAT or LRAT proof derives the empty clause from the clauses the
+checker is given, so what it certifies depends on what you give the
+checker:
+
+- **Plain solve.** The formula you added is unsatisfiable. Give the
+  checker that formula, written with
+  [`write_dimacs()`](https://pedrobtz.github.io/zusat/reference/write_dimacs.md).
+
+- **Under assumptions.** An `"unsat"` from
+  [`sat_solve()`](https://pedrobtz.github.io/zusat/reference/sat_solve.md)
+  with `assumptions` refutes the formula *together with* the failed
+  assumptions, not the formula alone. Add each failed assumption (see
+  [`sat_failed()`](https://pedrobtz.github.io/zusat/reference/sat_failed.md))
+  as a unit clause to the CNF given to the checker.
+
+- **Incrementally.** Every clause added while tracing – including those
+  added after an earlier solve, and the blocking clauses
+  [`sat_solutions()`](https://pedrobtz.github.io/zusat/reference/sat_solutions.md)
+  adds – is part of the formula the proof refers to, and DRAT records
+  none of them. The checker needs all of them.
+
+A constraint from
+[`sat_constrain()`](https://pedrobtz.github.io/zusat/reference/sat_constrain.md)
+behaves like an assumption: a refutation that relies on it refutes the
+formula plus that clause.
+
 ## Formats
 
 - `"drat"`:
@@ -82,10 +110,17 @@ garbage collected while still tracing, the file is closed then instead.
   faster and simpler to check, and the format used where the check
   itself has to be trusted.
 
-Other formats CaDiCaL supports – FRAT, VeriPB, IDRUP, LIDRUP – are
-reachable by setting the corresponding option with
+`format` sets CaDiCaL's `lrat` option on every call, so a retry with a
+different format gets the format asked for. Other formats CaDiCaL
+supports – FRAT, VeriPB, IDRUP, LIDRUP – are reachable by setting the
+corresponding option with
 [`sat_option()`](https://pedrobtz.github.io/zusat/reference/sat_option.md)
-before calling this.
+before calling this. CaDiCaL picks the first one enabled in the order
+VeriPB, FRAT, LRAT, IDRUP, LIDRUP, DRAT, so `"veripb"` and `"frat"` take
+precedence over `format`.
+
+If tracing cannot start, for instance because `path` cannot be opened,
+the `binary` and `lrat` options are restored to their previous values.
 
 ## See also
 

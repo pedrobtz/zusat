@@ -115,6 +115,25 @@ make that the caller's problem, and a collision does not raise an error –
 it silently changes what the formula means.</p>
     </div>
     <div class="section level2">
+    <h2 id="reserve-your-variables-first">Reserve your variables first<a class="anchor" aria-label="anchor" href="#reserve-your-variables-first"></a></h2>
+
+
+
+<p>Auxiliaries are allocated above every variable in use <em>so far</em>, so a
+variable you only introduce later may land on one. The solver remembers
+which variables are auxiliary and refuses them in <code><a href="sat_add.html">sat_add()</a></code>,
+<code><a href="sat_constrain.html">sat_constrain()</a></code>, assumptions, <code>vars</code> in <code><a href="sat_solutions.html">sat_solutions()</a></code> and these
+functions, rather than let the two silently merge. To avoid the error,
+declare your whole variable range up front with <code><a href="sat_reserve.html">sat_reserve()</a></code>:</p>
+<p></p><div class="sourceCode r"><pre><code><span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sat_solver.html">sat_solver</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/sat_reserve.html">sat_reserve</a></span><span class="op">(</span><span class="va">s</span>, <span class="fl">24</span><span class="op">)</span>       <span class="co"># variables 1..24 are ours</span></span>
+<span><span class="fu"><a href="../reference/cardinality.html">sat_exactly</a></span><span class="op">(</span><span class="va">s</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">12</span>, <span class="fl">1</span><span class="op">)</span>  <span class="co"># auxiliaries now start at 25</span></span>
+<span><span class="fu"><a href="../reference/cardinality.html">sat_exactly</a></span><span class="op">(</span><span class="va">s</span>, <span class="fl">13</span><span class="op">:</span><span class="fl">24</span>, <span class="fl">1</span><span class="op">)</span></span></code></pre><p></p></div>
+<p>A constraint is added whole or not at all: if it cannot be encoded, for
+instance because its auxiliaries would pass the maximum variable index,
+nothing is added.</p>
+    </div>
+    <div class="section level2">
     <h2 id="choosing-an-encoding">Choosing an encoding<a class="anchor" aria-label="anchor" href="#choosing-an-encoding"></a></h2>
 
 

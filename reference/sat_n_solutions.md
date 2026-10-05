@@ -24,7 +24,10 @@ sat_complete(x)
 ## Value
 
 `sat_n_solutions()` returns a count. `sat_complete()` returns `TRUE`
-when the enumeration ran out of models rather than hitting `limit`.
+only when the enumeration proved there are no further models: `FALSE`
+when it stopped at `limit`, and `FALSE` when a solve returned
+`"unknown"`, for instance because of
+[`sat_limit()`](https://pedrobtz.github.io/zusat/reference/sat_limit.md).
 
 ## Examples
 

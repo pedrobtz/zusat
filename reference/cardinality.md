@@ -68,6 +68,28 @@ which is the one number that is always correct. A function returning
 bare clauses would make that the caller's problem, and a collision does
 not raise an error – it silently changes what the formula means.
 
+## Reserve your variables first
+
+Auxiliaries are allocated above every variable in use *so far*, so a
+variable you only introduce later may land on one. The solver remembers
+which variables are auxiliary and refuses them in
+[`sat_add()`](https://pedrobtz.github.io/zusat/reference/sat_add.md),
+[`sat_constrain()`](https://pedrobtz.github.io/zusat/reference/sat_constrain.md),
+assumptions, `vars` in
+[`sat_solutions()`](https://pedrobtz.github.io/zusat/reference/sat_solutions.md)
+and these functions, rather than let the two silently merge. To avoid
+the error, declare your whole variable range up front with
+[`sat_reserve()`](https://pedrobtz.github.io/zusat/reference/sat_reserve.md):
+
+    s <- sat_solver()
+    sat_reserve(s, 24)       # variables 1..24 are ours
+    sat_exactly(s, 1:12, 1)  # auxiliaries now start at 25
+    sat_exactly(s, 13:24, 1)
+
+A constraint is added whole or not at all: if it cannot be encoded, for
+instance because its auxiliaries would pass the maximum variable index,
+nothing is added.
+
 ## Choosing an encoding
 
 - `"pairwise"`:

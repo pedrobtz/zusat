@@ -61,8 +61,9 @@ clause – "at least one of these" – that applies to the next
 
 
 <dt id="arg-literals">literals<a class="anchor" aria-label="anchor" href="#arg-literals"></a></dt>
-<dd><p>Numeric vector of non-zero literals. An empty vector sets
-the empty constraint, which makes the next solve unsatisfiable.</p></dd>
+<dd><p>Numeric vector of non-zero literals. An empty vector such as
+<code><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer()</a></code> sets the empty constraint, which makes the next solve
+unsatisfiable. <code>NULL</code> is an error.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -76,6 +77,10 @@ x1, x2, x3 true?" means permanently adding that clause and then having no
 way to take it back.</p>
 <p>A solver holds at most one constraint at a time; setting a new one replaces
 the last.</p>
+<p>A constraint covers one solve, so <code><a href="sat_solutions.html">sat_solutions()</a></code>, which solves once per
+model, refuses to start while one is pending: it would hold for the first
+model and not the rest. Pass it as the <code>constraint</code> argument of
+<code><a href="sat_solutions.html">sat_solutions()</a></code> instead, which applies it to every solve.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

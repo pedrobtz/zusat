@@ -46,6 +46,9 @@ end to end.
   [`sat_exactly()`](https://pedrobtz.github.io/zusat/reference/cardinality.md)
   encode "at most k of these", which CNF cannot state directly and most
   real models need.
+  [`sat_reserve()`](https://pedrobtz.github.io/zusat/reference/sat_reserve.md)
+  claims your variable range before their auxiliary variables are
+  allocated.
 
 - Steering:
 

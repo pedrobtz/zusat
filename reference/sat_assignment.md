@@ -19,8 +19,7 @@ sat_assignment(x)
 ## Value
 
 A logical vector named by variable number, empty when the formula was
-not satisfiable. `NA` marks a variable the solver left unassigned
-because either polarity extends the model.
+not satisfiable.
 
 ## Examples
 

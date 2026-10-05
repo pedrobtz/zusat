@@ -25,7 +25,7 @@ sat_limit(solver, name, value)
 
 - value:
 
-  Maximum for that measure. A negative value means no limit.
+  Maximum for that measure; see the Values section.
 
 ## Value
 
@@ -43,6 +43,19 @@ scheduled job.
 Like assumptions, limits are consumed by the next
 [`sat_solve()`](https://pedrobtz.github.io/zusat/reference/sat_solve.md)
 and are not retained afterwards. Set them again before each call.
+
+## Values
+
+`"conflicts"`, `"decisions"` and `"ticks"` bound a count of work: `0`
+allows none, and `Inf` or any negative value removes the bound.
+`"preprocessing"` and `"localsearch"` instead request a number of
+rounds, `0` by default; they take a non-negative whole number, since
+CaDiCaL ignores a negative one. `"terminate"` counts how often the
+solver polls for termination; upstream reserves it for testing and
+debugging, and `0`, `Inf` or a negative value leaves it unbounded.
+
+Values must be whole numbers no larger than `.Machine$integer.max`; they
+are checked rather than coerced, so `1.5` or `2^31` is an error.
 
 ## See also
 

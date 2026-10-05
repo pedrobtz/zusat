@@ -22,7 +22,8 @@ write_dimacs(x, path, comment = NULL)
 - comment:
 
   Optional character vector written as `c` comment lines at the top of
-  the file.
+  the file. An element containing line breaks becomes several comment
+  lines, so a comment can never be read back as formula.
 
 ## Value
 

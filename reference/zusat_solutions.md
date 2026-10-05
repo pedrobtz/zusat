@@ -26,7 +26,7 @@ solution by solution.
 
 ## Attributes
 
-`status`, `n_solutions` and `complete`. Read them with
+`status`, `n_solutions`, `complete` and `stopped`. Read them with
 [`sat_status()`](https://pedrobtz.github.io/zusat/reference/sat_status.md),
 [`sat_n_solutions()`](https://pedrobtz.github.io/zusat/reference/sat_n_solutions.md)
 and
@@ -35,6 +35,15 @@ and
 [`sat_complete()`](https://pedrobtz.github.io/zusat/reference/sat_n_solutions.md)
 is the one that matters: an enumeration stopped at `limit` looks exactly
 like an exhaustive one unless you ask.
+
+## Subsetting
+
+Filtering or reordering rows keeps the class, and the attributes go on
+describing the enumeration as a whole:
+[`sat_n_solutions()`](https://pedrobtz.github.io/zusat/reference/sat_n_solutions.md)
+still counts the models found, not the rows kept. Selecting columns
+gives a plain data frame, since the result no longer has the shape the
+class promises.
 
 ## See also
 

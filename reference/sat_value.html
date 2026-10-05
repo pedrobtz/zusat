@@ -62,15 +62,19 @@ profile. Meaningful only directly after a solve returned <code>"sat"</code>.</p>
 
 <dt id="arg-vars">vars<a class="anchor" aria-label="anchor" href="#arg-vars"></a></dt>
 <dd><p>Numeric vector of variable indices. Defaults to every variable
-the solver knows about.</p></dd>
+the solver knows about.
+The model is invalidated by anything that changes the formula or the next
+solve – <code><a href="sat_add.html">sat_add()</a></code>, <code><a href="sat_constrain.html">sat_constrain()</a></code>, <code><a href="sat_reserve.html">sat_reserve()</a></code> – so read it
+before making such a call, or solve again.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A logical vector the same length as <code>vars</code>. <code>NA</code> marks a variable
-carrying no value in this model: either the solver left it unassigned
-because both polarities extend the model, or the formula never mentions
-it at all.</p>
+    <p>A logical vector the same length as <code>vars</code>. Every variable up to
+<code><a href="sat_n_vars.html">sat_n_vars()</a></code> has a value, including one the formula never constrains
+(either value would do, and the solver picks one). <code>NA</code> marks a variable
+above <code><a href="sat_n_vars.html">sat_n_vars()</a></code>, which the solver has never seen. To learn which
+variables are forced rather than merely chosen, see <code><a href="sat_fixed.html">sat_fixed()</a></code>.</p>
     </div>
 
     <div class="section level2">

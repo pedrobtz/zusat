@@ -62,13 +62,20 @@ terminating zero is needed; it is added internally.</p>
 
 <dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>Either one clause, as a numeric vector of non-zero literals, or
-several, as a list of such vectors. An empty vector is the empty clause,
-which makes the formula unsatisfiable.</p></dd>
+several, as a list of such vectors. An empty vector such as <code><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer()</a></code>
+is the empty clause, which makes the formula unsatisfiable. <code>NULL</code> is
+not a clause and is an error, as is a variable a cardinality constraint
+introduced as auxiliary (see <code><a href="sat_reserve.html">sat_reserve()</a></code>).</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p><code>solver</code>, invisibly, so calls can be chained.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Every clause is checked before any is added, so an error part-way through
+a list leaves the solver as it was.</p>
     </div>
 
     <div class="section level2">

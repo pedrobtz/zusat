@@ -65,8 +65,9 @@ unless you ask.</p>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p><code>sat_n_solutions()</code> returns a count. <code>sat_complete()</code> returns
-<code>TRUE</code> when the enumeration ran out of models rather than hitting
-<code>limit</code>.</p>
+<code>TRUE</code> only when the enumeration proved there are no further models:
+<code>FALSE</code> when it stopped at <code>limit</code>, and <code>FALSE</code> when a solve returned
+<code>"unknown"</code>, for instance because of <code><a href="sat_limit.html">sat_limit()</a></code>.</p>
     </div>
 
     <div class="section level2">

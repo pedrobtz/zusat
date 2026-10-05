@@ -1,7 +1,8 @@
 # Get or set a CaDiCaL option
 
 CaDiCaL exposes several hundred integer-valued tuning options, for
-example `"elim"`, `"vivify"` or `"restartint"`. Names are CaDiCaL's own.
+example `"elim"`, `"vivify"` or `"restartint"`. Names are CaDiCaL's own;
+an unknown name is an error rather than a silent no-op.
 
 ## Usage
 
@@ -21,12 +22,18 @@ sat_option(solver, name, value)
 
 - value:
 
-  An integer to set. When missing, the current value is returned
-  instead.
+  A whole number to set, within the option's range. When missing, the
+  current value is returned instead.
 
 ## Value
 
-The option value; invisibly when setting.
+The option value as an integer; when setting, the value now stored,
+invisibly.
+
+## Details
+
+Each option has a range, and a value outside it is an error. CaDiCaL
+itself would clamp it to the nearest bound without saying so.
 
 ## Examples
 

@@ -41,6 +41,8 @@ most real models are built from.
   [`sat_at_least()`](https://pedrobtz.github.io/zusat/reference/cardinality.md)
   [`sat_exactly()`](https://pedrobtz.github.io/zusat/reference/cardinality.md)
   : Cardinality constraints
+- [`sat_reserve()`](https://pedrobtz.github.io/zusat/reference/sat_reserve.md)
+  : Reserve variable numbers before adding cardinality constraints
 
 ## Steering the search
 

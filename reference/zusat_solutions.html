@@ -67,10 +67,19 @@ use <code>split(x, x$solution)</code> to iterate solution by solution.</p>
     <h2 id="attributes">Attributes<a class="anchor" aria-label="anchor" href="#attributes"></a></h2>
 
 
-<p><code>status</code>, <code>n_solutions</code> and <code>complete</code>. Read them with <code><a href="sat_status.html">sat_status()</a></code>,
-<code><a href="sat_n_solutions.html">sat_n_solutions()</a></code> and <code><a href="sat_n_solutions.html">sat_complete()</a></code>.</p>
+<p><code>status</code>, <code>n_solutions</code>, <code>complete</code> and <code>stopped</code>. Read them with
+<code><a href="sat_status.html">sat_status()</a></code>, <code><a href="sat_n_solutions.html">sat_n_solutions()</a></code> and <code><a href="sat_n_solutions.html">sat_complete()</a></code>.</p>
 <p><code><a href="sat_n_solutions.html">sat_complete()</a></code> is the one that matters: an enumeration stopped at <code>limit</code>
 looks exactly like an exhaustive one unless you ask.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="subsetting">Subsetting<a class="anchor" aria-label="anchor" href="#subsetting"></a></h2>
+
+
+<p>Filtering or reordering rows keeps the class, and the attributes go on
+describing the enumeration as a whole: <code><a href="sat_n_solutions.html">sat_n_solutions()</a></code> still counts the
+models found, not the rows kept. Selecting columns gives a plain data
+frame, since the result no longer has the shape the class promises.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

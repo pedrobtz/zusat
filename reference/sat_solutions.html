@@ -52,13 +52,34 @@ this is much cheaper than solving from scratch each time.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">sat_solutions</span><span class="op">(</span><span class="va">x</span>, limit <span class="op">=</span> <span class="fl">1000</span>, vars <span class="op">=</span> <span class="cn">NULL</span>, assumptions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="op">)</span>, <span class="va">...</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">sat_solutions</span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  limit <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>  vars <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  assumptions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  constraint <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Default S3 method</span></span>
-<span><span class="fu">sat_solutions</span><span class="op">(</span><span class="va">x</span>, limit <span class="op">=</span> <span class="fl">1000</span>, vars <span class="op">=</span> <span class="cn">NULL</span>, assumptions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="op">)</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu">sat_solutions</span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  limit <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>  vars <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  assumptions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  constraint <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'zusat_solver'</span></span>
-<span><span class="fu">sat_solutions</span><span class="op">(</span><span class="va">x</span>, limit <span class="op">=</span> <span class="fl">1000</span>, vars <span class="op">=</span> <span class="cn">NULL</span>, assumptions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="op">)</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">sat_solutions</span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  limit <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>  vars <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  assumptions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  constraint <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -85,6 +106,14 @@ formula.</p></dd>
 enumeration.</p></dd>
 
 
+<dt id="arg-constraint">constraint<a class="anchor" aria-label="anchor" href="#arg-constraint"></a></dt>
+<dd><p>Optional clause, as for <code><a href="sat_constrain.html">sat_constrain()</a></code>, that every
+model must satisfy. It is applied to each solve of the enumeration and
+is not retained afterwards. A constraint already set on the solver with
+<code><a href="sat_constrain.html">sat_constrain()</a></code> would cover only the first solve, so enumerating while
+one is pending is an error.</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Passed to methods.</p></dd>
 
@@ -94,7 +123,7 @@ enumeration.</p></dd>
     <p>A <a href="zusat_solutions.html">zusat_solutions</a> object: a data frame with one row per variable
 per solution, with columns <code>solution</code>, <code>variable</code> and <code>value</code>. Use
 <code><a href="sat_n_solutions.html">sat_complete()</a></code> to tell an exhausted enumeration from one that stopped
-at <code>limit</code>.</p>
+at <code>limit</code> or whose search gave up.</p>
     </div>
     <div class="section level2">
     <h2 id="projecting-onto-the-variables-you-care-about">Projecting onto the variables you care about<a class="anchor" aria-label="anchor" href="#projecting-onto-the-variables-you-care-about"></a></h2>

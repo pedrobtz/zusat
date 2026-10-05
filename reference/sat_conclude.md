@@ -3,7 +3,10 @@
 Emits the conclusion of the last solve into the proof. Only meaningful
 for the interactive formats (IDRUP and LIDRUP), where a proof records a
 whole session of solves rather than a single refutation. For DRAT and
-LRAT the refutation already ends the proof and this does nothing.
+LRAT it writes nothing: when the solve derived the empty clause, that
+already ends the proof, and when it was `"unsat"` only under assumptions
+or a constraint, the proof refutes the formula together with them (see
+[`sat_trace_proof()`](https://pedrobtz.github.io/zusat/reference/sat_trace_proof.md)).
 
 ## Usage
 
@@ -20,6 +23,11 @@ sat_conclude(solver)
 ## Value
 
 `solver`, invisibly.
+
+## Details
+
+It needs a finished solve – `"sat"`, `"unsat"` or `"unknown"` – with no
+clause or constraint added since; otherwise it is an error.
 
 ## Examples
 

@@ -80,7 +80,8 @@ enumerate more than one model.</p></dd>
 <dt>Cardinality</dt>
 <dd><p><code><a href="cardinality.html">sat_at_most()</a></code>, <code><a href="cardinality.html">sat_at_least()</a></code> and <code><a href="cardinality.html">sat_exactly()</a></code>
 encode "at most k of these", which CNF cannot state directly and most
-real models need.</p></dd>
+real models need. <code><a href="sat_reserve.html">sat_reserve()</a></code> claims your variable range before
+their auxiliary variables are allocated.</p></dd>
 
 <dt>Steering</dt>
 <dd><p>Assumptions via <code><a href="sat_solve.html">sat_solve()</a></code>, a one-shot clause via

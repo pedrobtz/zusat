@@ -29,6 +29,9 @@
   [`sat_exactly()`](https://pedrobtz.github.io/zusat/reference/cardinality.md)
   encode cardinality constraints, choosing between a pairwise and a
   sequential-counter encoding automatically.
+  [`sat_reserve()`](https://pedrobtz.github.io/zusat/reference/sat_reserve.md)
+  claims the caller’s variable range first, and auxiliary variables are
+  refused wherever a user variable is expected.
 - [`sat_trace_proof()`](https://pedrobtz.github.io/zusat/reference/sat_trace_proof.md)
   and
   [`sat_close_proof()`](https://pedrobtz.github.io/zusat/reference/sat_close_proof.md)

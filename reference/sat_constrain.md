@@ -19,8 +19,10 @@ sat_constrain(solver, literals)
 
 - literals:
 
-  Numeric vector of non-zero literals. An empty vector sets the empty
-  constraint, which makes the next solve unsatisfiable.
+  Numeric vector of non-zero literals. An empty vector such as
+  [`integer()`](https://rdrr.io/r/base/integer.html) sets the empty
+  constraint, which makes the next solve unsatisfiable. `NULL` is an
+  error.
 
 ## Value
 
@@ -34,6 +36,14 @@ no way to take it back.
 
 A solver holds at most one constraint at a time; setting a new one
 replaces the last.
+
+A constraint covers one solve, so
+[`sat_solutions()`](https://pedrobtz.github.io/zusat/reference/sat_solutions.md),
+which solves once per model, refuses to start while one is pending: it
+would hold for the first model and not the rest. Pass it as the
+`constraint` argument of
+[`sat_solutions()`](https://pedrobtz.github.io/zusat/reference/sat_solutions.md)
+instead, which applies it to every solve.
 
 ## See also
 

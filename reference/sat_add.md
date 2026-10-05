@@ -20,12 +20,21 @@ sat_add(solver, x)
 - x:
 
   Either one clause, as a numeric vector of non-zero literals, or
-  several, as a list of such vectors. An empty vector is the empty
-  clause, which makes the formula unsatisfiable.
+  several, as a list of such vectors. An empty vector such as
+  [`integer()`](https://rdrr.io/r/base/integer.html) is the empty
+  clause, which makes the formula unsatisfiable. `NULL` is not a clause
+  and is an error, as is a variable a cardinality constraint introduced
+  as auxiliary (see
+  [`sat_reserve()`](https://pedrobtz.github.io/zusat/reference/sat_reserve.md)).
 
 ## Value
 
 `solver`, invisibly, so calls can be chained.
+
+## Details
+
+Every clause is checked before any is added, so an error part-way
+through a list leaves the solver as it was.
 
 ## Examples
 

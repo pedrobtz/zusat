@@ -116,6 +116,25 @@ proof that most checkers will reject. If a solver is garbage collected
 while still tracing, the file is closed then instead.</p>
     </div>
     <div class="section level2">
+    <h2 id="what-the-proof-proves">What the proof proves<a class="anchor" aria-label="anchor" href="#what-the-proof-proves"></a></h2>
+
+
+
+<p>A DRAT or LRAT proof derives the empty clause from the clauses the checker
+is given, so what it certifies depends on what you give the checker:</p><ul><li><p><strong>Plain solve.</strong> The formula you added is unsatisfiable. Give the
+checker that formula, written with <code><a href="write_dimacs.html">write_dimacs()</a></code>.</p></li>
+<li><p><strong>Under assumptions.</strong> An <code>"unsat"</code> from <code><a href="sat_solve.html">sat_solve()</a></code> with
+<code>assumptions</code> refutes the formula <em>together with</em> the failed
+assumptions, not the formula alone. Add each failed assumption (see
+<code><a href="sat_failed.html">sat_failed()</a></code>) as a unit clause to the CNF given to the checker.</p></li>
+<li><p><strong>Incrementally.</strong> Every clause added while tracing – including those
+added after an earlier solve, and the blocking clauses
+<code><a href="sat_solutions.html">sat_solutions()</a></code> adds – is part of the formula the proof refers to,
+and DRAT records none of them. The checker needs all of them.</p></li>
+</ul><p>A constraint from <code><a href="sat_constrain.html">sat_constrain()</a></code> behaves like an assumption: a
+refutation that relies on it refutes the formula plus that clause.</p>
+    </div>
+    <div class="section level2">
     <h2 id="formats">Formats<a class="anchor" aria-label="anchor" href="#formats"></a></h2>
 
 
@@ -133,9 +152,14 @@ Larger files, far faster and simpler to check, and the format used
 where the check itself has to be trusted.</p></dd>
 
 
-</dl><p>Other formats CaDiCaL supports – FRAT, VeriPB, IDRUP, LIDRUP – are
-reachable by setting the corresponding option with <code><a href="sat_option.html">sat_option()</a></code> before
-calling this.</p>
+</dl><p><code>format</code> sets CaDiCaL's <code>lrat</code> option on every call, so a retry with a
+different format gets the format asked for. Other formats CaDiCaL
+supports – FRAT, VeriPB, IDRUP, LIDRUP – are reachable by setting the
+corresponding option with <code><a href="sat_option.html">sat_option()</a></code> before calling this. CaDiCaL
+picks the first one enabled in the order VeriPB, FRAT, LRAT, IDRUP,
+LIDRUP, DRAT, so <code>"veripb"</code> and <code>"frat"</code> take precedence over <code>format</code>.</p>
+<p>If tracing cannot start, for instance because <code>path</code> cannot be opened,
+the <code>binary</code> and <code>lrat</code> options are restored to their previous values.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
