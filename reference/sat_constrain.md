@@ -58,7 +58,7 @@ s <- sat_solver(list(c(1, 2)))
 # require at least one of x1, x2 to be false, just this once
 sat_constrain(s, c(-1, -2))
 sat_solve(s)
-#> <zusat_solution> sat  (2 variables, 1 active clause, 0.000s)
+#> <zusat_solution> sat  (2 variables, 1 active clause, 0.001s)
 #>  variable value
 #>         1  TRUE
 #>         2 FALSE
